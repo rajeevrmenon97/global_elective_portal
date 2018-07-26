@@ -4,15 +4,18 @@ from django.contrib.postgres.fields import ArrayField
 class Department(models.Model):
     dept_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)
+    password = models.CharField(max_length=100,default="123")
 
 class Faculty(models.Model):
     faculty_id = models.CharField(max_length=10,primary_key=True)
     name = models.CharField(max_length=100)
+    password = models.CharField(max_length=100,default="123")
     dept = models.ForeignKey(Department, on_delete=models.CASCADE)
 
 class Student(models.Model):
     roll_number = models.CharField(max_length=10,primary_key=True)
     name = models.CharField(max_length=100)
+    password = models.CharField(max_length=100,default="123")
     date_of_birth = models.DateField()
     email_id = models.EmailField(max_length=100)
     FA = models.ForeignKey(Faculty, on_delete=models.PROTECT)

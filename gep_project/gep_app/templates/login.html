@@ -1,0 +1,22 @@
+{% extends "index.html" %}
+
+{% block main_content %}
+<div class="container-fluid bg-image">
+	<form class="col-lg-4 col-md-6 offset-lg-4 offset-md-3 form-container" action="{% url 'stage_1' %}" method="post">
+		{% csrf_token %}
+		<div class="h1 text-center text-success mb-md-4">Student Login</div>
+		<div class="form-group">
+			<input class="form-control text-success" type="text" placeholder="Username" id="username"/>
+			<small class="form-text text-muted">Roll Number</small>
+		</div>
+		<div class="form-group">
+			<input class="form-control text-success" type="password" placeholder="Password" id="password"/>
+		</div>
+		<div class="form-group">
+			<input class="btn btn-success btn-block" type="submit" value="Submit"/>
+		</div>
+		<a class="btn btn-link text-success text-center pt-md-0">Forgot Password?</a>
+	</form>
+	<a class="btn btn-success text-light fixed-bottom">Download Allotment Guidelines</a>
+</div>
+{% endblock %}

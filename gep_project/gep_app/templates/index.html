@@ -1,0 +1,23 @@
+{% load static %}
+<!doctype html>
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+		<title>Global Elective Allotment</title>
+		<link rel="stylesheet" href="{% static 'gep_app/css/bootstrap.min.css' %}">
+		<link rel="stylesheet" href="{% static 'gep_app/css/styles.css' %}">
+		<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+		<script src="{% static 'gep_app/js/bootstrap.min.js' %}"></script>
+	</head>
+	<body>
+		<nav class="navbar fixed-top navbar-light bg-success">
+			<a class="navbar-brand text-light" href="#">
+				<img src="{% static 'gep_app/images/nitc-logo.png' %}" width="35px" height="35px" alt="" class="d-inline-block align-top">
+				NITC Global Elective Allotment Portal
+			</a>
+			{% block header_content %}{% endblock %}
+		</nav>
+        {% block main_content %}{% endblock %}		
+	</body>
+</html>
