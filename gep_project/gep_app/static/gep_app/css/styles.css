@@ -1,10 +1,14 @@
+* {
+	font-family: 'Roboto', sans-serif;
+}
+
 html,body {
 	height: 100%;
 }
 
 .container-fluid {
-	height: calc(100% - 53px);
-	margin-top: 53px;
+	height: calc(100% - 66px);
+	margin-top: 66px;
 }
 
 .bg-image {
@@ -35,5 +39,9 @@ html,body {
 	.form-container {
 		margin-top: 0;
 		height: 100%;
+	}
+	
+	.bg-image {
+		background-image: url(/static/gep_app/images/bg-mini.jpg);
 	}
 }
