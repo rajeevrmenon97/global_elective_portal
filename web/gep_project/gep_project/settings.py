@@ -88,7 +88,13 @@ DATABASES = {
 AUTH_USER_MODEL = 'gep_app.User'
 
 # Login URL
-LOGIN_URL = '/login'
+LOGIN_URL = 'login'
+
+# Login redirect
+LOGIN_REDIRECT_URL = 'home'
+
+# Logout redirect
+LOGOUT_REDIRECT_URL = 'login'
 
 #Authentication backends
 AUTHENTICATION_BACKENDS = (

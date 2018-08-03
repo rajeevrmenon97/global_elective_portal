@@ -6,6 +6,21 @@ from django.contrib.auth import authenticate, login as auth_login , logout as au
 from django.contrib.auth.decorators import login_required, user_passes_test
 from .models import Student
 
+def login(request):
+	context = {
+		'request':request
+	}
+	if request.method == 'POST':
+		user = authenticate(request,username=request.POST['username'],password=request.POST['password'])
+		if user is not None:
+			auth_login(request, user)
+			context = {
+				'request':request
+			}
+			redirect('home')
+	else:
+		return render(request, 'registration/login.html')
+
 def student_check(user):
 	return user.is_student()
 
@@ -16,7 +31,8 @@ def department_check(user):
 	return user.is_department()
 
 @login_required
-def home_view(user):
+def home(request):
+	user = request.user
 	if student_check(user):
 		return redirect('student_home')
 	elif faculty_check(user):
@@ -25,25 +41,6 @@ def home_view(user):
 		return redirect('department_home')
 	else:
 		raise Http404
-		
-		
-def login(request):
-	if request.method == 'POST':
-		user = authenticate(request,username=request.POST['username'],password=request.POST['password'])
-		if user is not None:
-			auth_login(request, user)
-			home_view(user)
-		context = {
-			'error':True,
-		}
-		return render(request, 'login.html', context)
-	elif request.user.is_authenticated():
-		home_view(request.user)
-	else:
-		context = {
-			'error':False,
-		}
-		return render(request, 'login.html', context)
 
 @login_required
 @user_passes_test(student_check)
