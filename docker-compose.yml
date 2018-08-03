@@ -10,15 +10,15 @@ services:
       POSTGRES_DB: global_elective_portal
     restart: always
     volumes:
-      - ./postgres_data:/var/lib/postgresql/data
+      - ./db/postgres_data:/var/lib/postgresql/data
 
   web:
-    build: .
+    build: ./web
     container_name: gep_web
     command: ["bash", "./wait_for_db.sh", "gep_db", "--", "python", "./gep_project/manage.py", "runserver", "0.0.0.0:8000"]
     restart: always
     volumes:
-      - ./gep_project:/code/gep_project
+      - ./web/gep_project:/code/gep_project
     ports:
       - "8000:8000"
     depends_on:
