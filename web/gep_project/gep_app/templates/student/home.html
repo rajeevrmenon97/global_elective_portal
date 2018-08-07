@@ -2,49 +2,57 @@
 {% load static %}
 
 {% block js_files %} 
-<script type="application/javascript" src="{% static 'gep_app/js/dropdown.js' %}"></script>
+<script type="application/javascript" src="{% static 'gep_app/js/dropdown_multiple.js' %}"></script>
 {% endblock %}
 
 {% block main_content %}
 <div id="stage_1-container" class="container-fluid">
 	<a class="col-sm-12 text-right btn btn-link text-success" href="{% url 'logout' %}">Logout</a>
 	<div class="h4 col-sm-12 text-center text-success">Stage 1: Submission of Academic Details</div>
-	<form action="#" method="post">
+	<form action="{% url 'student_home' %}" method="post">
 		{% csrf_token %}
 		<div class="form-group">
-			<label class="form-label" for="name">Name</label>
-			<input class="form-control disabled" disabled type="text" name="name" value="{{student.name}}"/>
+			<label class="form-label" for="username">Roll Number</label>
+			<input class="form-control disabled" disabled type="text" id="username" name="username" readonly="readonly" value="{{student.roll_number}}"/>
 		</div>
 		<div class="form-group">
-			<label class="form-label" for="username">Roll Number</label>
-			<input class="form-control disabled" disabled type="text" name="username" readonly="readonly" value="{{student.roll_number}}"/>
+			<label class="form-label" for="name">Name</label>
+			<input class="form-control disabled" disabled type="text" id="name" name="name" value="{{student.name}}"/>
 		</div>
 		<div class="form-group">
 			<label class="form-label" for="next_semester">Upcoming semester</label>
-			<input class="form-control" type="number" placeholder="Semester" name="next_semester" min=0 max=10 required/>
+			<select class="form-control" type="number" placeholder="Semester" id="next_semester" name="next_semester" value="{{student.next_semester}}" required>
+				{% for semester in semesters %}
+				<option value="{{semester.0}}">{{semester.1}}</option>
+				{% endfor %}
+			</select>
+			{{form.next_semester.errors}}
 		</div>
 		<div class="form-group">
 			<label class="form-label" for="current_CGPA">CGPA upto previous semester</label>
-			<input class="form-control" type="number" placeholder="CGPA" name="current_CGPA" min=0 max=10 required/>
+			<input class="form-control" type="number" placeholder="CGPA" id="current_CGPA" name="current_CGPA" value="{{student.current_CGPA}}" required min=0 max=10/>
 		</div>
 		<div class="form-group">
-			<label class="form-label" for="no_global_electives">Number of global electives to be taken in coming semester</label>
-			<input class="form-control" type="number" placeholder="Number of global electives" name="no_global_electives" required/>
+			<label class="form-label" for="no_of_global_electives">Number of global electives to be taken in coming semester</label>
+			<input class="form-control" type="number" placeholder="Number of global electives" id="no_of_global_electives" name="no_of_global_electives" value="{{student.no_of_global_electives}}" required/>
 		</div>
 		<div class="form-group">
 			<label class="form-label" for="core-slots-dropdown">Slots of core courses to be taken in coming semester</label>
-			<div class="dropdown" id="core-slots-dropdown">
-				<div class="dropdown-toggle form-control" id="core-slots-dropdown-btn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Choose Slots</div>
-				<div class="dropdown-menu" aria-labelledby="core-slots-dropdown-btn">
+			{{form.core_slots}}
+		</div>
+		<div class="form-group">
+			<label class="form-label" for="core-slots-dropdown">Slots of core courses to be taken in coming semester</label>
+			<div class="dropdown">
+				<div class="dropdown-toggle form-control" id="dropdown-btn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">No slots chosen</div>
+				<div class="dropdown-menu" aria-labelledby="dropdown-btn">
 					{% for slot in slots %}
-					<div class="form-check dropdown-item ml-md-4">
-					    <input class="form-check-input" type="checkbox" name="slot_{{slot}}" id="slot_{{slot}}" value="slot_{{slot}}">
-					    <label class="form-check-label" for="slot_{{slot}}">
-						Slot {{slot}}
-					  </label>
+					<div class="form-check dropdown-item">
+						<input class="form-check-input" type="checkbox" id="slot_{{slot.0}}" value="{{slot.0}}">
+						<label class="form-check-label" for="slot_{{slot.0}}">{{slot.1}}</label>
 					</div>
 					{% endfor %}
-			    </div>
+				</div>
+				<input type="hidden" id="dropdown-content"/>
 			</div>
 		</div>
 		<input class="btn btn-success" type="submit" value="Submit"/>

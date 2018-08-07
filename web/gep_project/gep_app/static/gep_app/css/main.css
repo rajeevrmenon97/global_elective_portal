@@ -31,6 +31,13 @@ html,body {
     background: #5CB85C;
 }
 
+.errorlist {
+	font-size: 11px;
+	color: red;
+	text-align: right;
+	list-style-type: none;
+}
+
 .bg-image {
 	overflow: auto;
 	background-image: url(/static/gep_app/images/bg.jpg);
@@ -53,6 +60,11 @@ html,body {
 .form-control-transparent:focus {
 	border-color: transparent;
 	box-shadow: 0px 0px 5px white;
+}
+
+.form-check-input {
+	position: relative;
+	margin-left: -.25rem;
 }
 
 @media screen and (max-width: 400px){

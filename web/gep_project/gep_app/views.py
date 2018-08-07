@@ -1,22 +1,16 @@
 from django.shortcuts import render
 from django.shortcuts import redirect
 from django.http import Http404
-#from .forms import LoginForm
 from django.contrib.auth import authenticate, login as auth_login , logout as auth_logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from .models import Student
+from .forms import StudentAcademicsForm
 
 def login(request):
-	context = {
-		'request':request
-	}
 	if request.method == 'POST':
 		user = authenticate(request,username=request.POST['username'],password=request.POST['password'])
 		if user is not None:
 			auth_login(request, user)
-			context = {
-				'request':request
-			}
 			redirect('home')
 	else:
 		return render(request, 'registration/login.html')
@@ -44,16 +38,37 @@ def home(request):
 
 @login_required
 @user_passes_test(student_check)
-def student_home(request):	
+def student_home(request):
 	user = request.user
 	student = Student.objects.get(user=user)
 	slots = Student.SLOT_CHOICES
+	semesters = Student.SEMESTER_CHOICES
+	
+	if request.method == 'POST':
+		form = StudentAcademicsForm(request.POST, instance=student)
+		if form.is_valid():
+			form.save()
+		else:
+			context = {
+				'slots':slots,
+				'semesters':semesters,
+				'student': {
+					'name':student.name,
+					'roll_number':user.username,
+				},
+				'form' : form
+			}
+			return render(request, 'student/home.html', context)
+
+	form = StudentAcademicsForm()
 	context = {
 		'slots':slots,
+		'semesters':semesters,
 		'student': {
 			'name':student.name,
 			'roll_number':user.username,
-		}
+		},
+		'form' : form
 	}
 	return render(request, 'student/home.html', context)
 

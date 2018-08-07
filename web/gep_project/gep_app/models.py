@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.postgres.fields import ArrayField
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth import get_user_model
+from decimal import Decimal
 from django.core.validators import MaxValueValidator, MinValueValidator
 
 class User(AbstractUser):
@@ -33,7 +34,7 @@ class Department(models.Model):
     name = models.CharField(max_length=100)
 
     def __str__(self):
-        return self.name + ' (' + self.dept_id + ')'
+        return self.name + ' (' + self.user.username + ')'
 
 class Faculty(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
@@ -41,7 +42,7 @@ class Faculty(models.Model):
     dept = models.ForeignKey(Department, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.name + ' (' + self.faculty_id + ')'
+        return self.name + ' (' + self.user.username + ')'
 
 class Student(models.Model):
     SLOT_CHOICES = (('A','Slot A'),('B','Slot B'),('C','Slot C'),('D','Slot D'),('E','Slot E'),('F','Slot F'),('G','Slot G'),('H','Slot H'),('P','Slot P'),('Q','Slot Q'),('R','Slot R'),('S','Slot S'),('T','Slot T'),)
@@ -52,14 +53,14 @@ class Student(models.Model):
     date_of_birth = models.DateField()
     FA = models.ForeignKey(Faculty, on_delete=models.PROTECT)
     dept = models.ForeignKey(Department, on_delete=models.CASCADE)
-    current_CGPA = models.DecimalField(blank=True,null=True,validators=[MinValueValidator(0), MaxValueValidator(10)],decimal_places=2,max_digits=4)
+    current_CGPA = models.DecimalField(blank=True,null=True,decimal_places=2,max_digits=4,validators=[MinValueValidator(Decimal('0')),MaxValueValidator(Decimal('10'))])
     next_semester = models.IntegerField(blank=True,null=True,choices=SEMESTER_CHOICES)
-    core_slots = ArrayField(models.CharField(max_length=1,choices=SLOT_CHOICES),blank=True,null=True)
+    core_slots = ArrayField(models.CharField(blank=True,null=True,max_length=1,choices=SLOT_CHOICES))
     no_of_global_electives = models.IntegerField(blank=True,null=True,validators=[MinValueValidator(0)])
     submission_datetime = models.DateTimeField(blank=True,null=True)
 
     def __str__(self):
-        return self.name + ' (' + self.roll_number + ')'
+        return self.name + ' (' + self.user.username + ')'
 
     def has_submitted(self):
         return self.submission_datetime is not None
