@@ -53,9 +53,9 @@ class Student(models.Model):
     date_of_birth = models.DateField()
     FA = models.ForeignKey(Faculty, on_delete=models.PROTECT)
     dept = models.ForeignKey(Department, on_delete=models.CASCADE)
-    current_CGPA = models.DecimalField(blank=True,null=True,decimal_places=2,max_digits=4,validators=[MinValueValidator(Decimal('0')),MaxValueValidator(Decimal('10'))])
+    current_CGPA = models.DecimalField(blank=True,null=True,decimal_places=2,max_digits=4,validators=[MinValueValidator(0),MaxValueValidator(10)])
     next_semester = models.IntegerField(blank=True,null=True,choices=SEMESTER_CHOICES)
-    core_slots = ArrayField(models.CharField(blank=True,null=True,max_length=1,choices=SLOT_CHOICES))
+    core_slots = ArrayField(models.CharField(max_length=1,choices=SLOT_CHOICES),blank=True,null=True)
     no_of_global_electives = models.IntegerField(blank=True,null=True,validators=[MinValueValidator(0)])
     submission_datetime = models.DateTimeField(blank=True,null=True)
 

@@ -41,34 +41,21 @@ def home(request):
 def student_home(request):
 	user = request.user
 	student = Student.objects.get(user=user)
-	slots = Student.SLOT_CHOICES
-	semesters = Student.SEMESTER_CHOICES
+	#slots = Student.SLOT_CHOICES
+	#semesters = Student.SEMESTER_CHOICES
 	
 	if request.method == 'POST':
 		form = StudentAcademicsForm(request.POST, instance=student)
 		if form.is_valid():
 			form.save()
-		else:
-			context = {
-				'slots':slots,
-				'semesters':semesters,
-				'student': {
-					'name':student.name,
-					'roll_number':user.username,
-				},
-				'form' : form
-			}
-			return render(request, 'student/home.html', context)
-
-	form = StudentAcademicsForm()
+	else:
+		form = StudentAcademicsForm(instance=student)
+		
 	context = {
-		'slots':slots,
-		'semesters':semesters,
-		'student': {
-			'name':student.name,
-			'roll_number':user.username,
-		},
-		'form' : form
+		#'slots':slots,
+		#'semesters':semesters,
+		'student': student,
+		'form':form,
 	}
 	return render(request, 'student/home.html', context)
 

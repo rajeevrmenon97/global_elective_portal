@@ -1,3 +1,4 @@
+{% load static %}
 <script type="application/javascript" src="{% static 'gep_app/js/dropdown_multiple.js' %}"></script>
 {% with id=widget.attrs.id %}
 <div {% if id %} id="{{ id }}"{% endif %} class="dropdown {% if widget.attrs.class %}{{ widget.attrs.class }}{% endif %}">
@@ -14,12 +15,8 @@
 			{% if group %}
 				</div></div>
 			{% endif %}
-		<div class="form-check dropdown-item">
-			<input class="form-check-input" type="checkbox" id="slot_{{slot.0}}" value="{{slot.0}}">
-			<label class="form-check-label" for="slot_{{slot.0}}">{{slot.1}}</label>
-		</div>
 		{% endfor %}
 	</div>
 	<input type="hidden" id="dropdown-content"/>
-	{% endwith %}
 </div>
+{% endwith %}
