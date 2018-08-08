@@ -12,73 +12,33 @@
 	<form action="{% url 'student_home' %}" method="post">
 		{% csrf_token %}
 		<div class="form-group">
-			<label class="form-label" for="username">Roll Number</label>
-			<input class="form-control disabled" disabled type="text" id="username" name="username" readonly="readonly" value="{{student.user.username}}"/>
+			<label class="form-label" for="id_user">Roll Number</label>
+			{{form.user}}
 		</div>
 		<div class="form-group">
-			<label class="form-label" for="name">Name</label>
-			<input class="form-control disabled" disabled type="text" id="name" name="name" value="{{student.name}}"/>
+			<label class="form-label" for="id_name">Name</label>
+			{{form.name}}
 		</div>
 		<div class="form-group">
-			<label class="form-label" for="current_CGPA">CGPA upto previous semester</label>
+			<label class="form-label" for="id_current_CGPA">CGPA upto previous semester</label>
 			{{form.current_CGPA}}
 			{{form.current_CGPA.errors}}
 		</div>
 		<div class="form-group">
-			<label class="form-label" for="next_semester">Upcoming semester</label>
+			<label class="form-label" for="id_next_semester">Upcoming semester</label>
 			{{form.next_semester}}
 			{{form.next_semester.errors}}
 		</div>
 		<div class="form-group">
-			<label class="form-label" for="no_of_global_electives">Number of global electives to be taken in coming semester</label>
+			<label class="form-label" for="id_no_of_global_electives">Number of global electives to be taken in coming semester</label>
 			{{form.no_of_global_electives}}
 			{{form.no_of_global_electives.errors}}
 		</div>
 		<div class="form-group">
-			<label class="form-label" for="core_slots">Slots of core courses to be taken in coming semester</label>
+			<label class="form-label" for="id_core_slots">Slots of core courses to be taken in coming semester</label>
 			{{form.core_slots}}
 			{{form.core_slots.errors}}
 		</div>
-		<!---
-		<div class="form-group">
-			<label class="form-label" for="next_semester">Upcoming semester</label>
-			<select class="form-control" type="number" placeholder="Semester" id="next_semester" name="next_semester" {% if student.next_semester is not None %}value="{{student.next_semester}}"{% endif %}>
-				{% for semester in semesters %}
-				<option value="{{semester.0}}" {% if student.next_semester == semester.0 %}selected{% endif %}>{{semester.1}}</option>
-				{% endfor %}
-			</select>
-			{{form.next_semester.errors}}
-		</div>
-		<div class="form-group">
-			<label class="form-label" for="no_of_global_electives">Number of global electives to be taken in coming semester</label>
-			<input class="form-control" type="number" placeholder="Number of global electives" id="no_of_global_electives" name="no_of_global_electives" {% if student.no_of_global_electives is not None %}value="{{student.no_of_global_electives}}"{% endif %}/>
-			{{form.no_of_global_electives.errors}}
-		</div>
-		<div class="form-group">
-			<label class="form-label" for="core_slots">Slots of core courses to be taken in coming semester</label>
-			<select multiple class="form-control" type="text" placeholder="No slots chosen" id="core_slots" name="core_slots" {% if student.core_slots is not None %}value="{{student.core_slots}}"{% endif %}>
-				{% for slot in slots %}
-				<option value="{{slot.0}}" {% if slot.0 in student.core_slots %}selected{% endif %}>{{slot.1}}</option>
-				{% endfor %}
-			</select>
-			{{form.core_slots.errors}}
-		</div>
-		<div class="form-group">
-			<label class="form-label" for="core_slots">Slots of core courses to be taken in coming semester</label>
-			<div class="dropdown">
-				<div id="dropdown-btn" class="dropdown-toggle form-control" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">No slots chosen</div>
-				<div class="dropdown-menu" aria-labelledby="dropdown-btn">
-					{% for slot in slots %}
-					<div class="form-check dropdown-item">
-						<input class="form-check-input" type="checkbox" id="slot_{{slot.0}}" value="{{slot.0}}" {% if slot.0 in student.core_slots %}checked{% endif %}>
-						<label class="form-check-label" for="slot_{{slot.0}}">{{slot.1}}</label>
-					</div>
-					{% endfor %}
-				</div>
-				<input type="hidden" class="dropdown-content" id="core_slots" name="core_slots"/>
-			</div>
-			{{form.core_slots.errors}}
-		</div>-->
 		<input class="btn btn-success" type="submit" value="Submit"/>
 	</form>
 </div>

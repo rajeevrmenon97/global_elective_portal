@@ -5,12 +5,22 @@ from .models import Student
 from datetime import datetime
 
 class StudentAcademicsForm(forms.ModelForm):
+    error_css_class = 'form-error-message'
+
     class Meta:
         model = Student
-        fields = ['current_CGPA','next_semester','no_of_global_electives','core_slots','submission_datetime']
+        fields = ['name','user','current_CGPA','next_semester','no_of_global_electives','core_slots','submission_datetime']
 
     def __init__(self, *args, **kwargs):
         super(StudentAcademicsForm, self).__init__(*args, **kwargs)
+        self.fields['user'].widget = forms.TextInput(attrs={
+                'readonly': True,
+                'class': 'form-control',
+            })
+        self.fields['name'].widget.attrs.update({
+                'readonly': True,
+                'class': 'form-control',
+           }) 
         self.fields['current_CGPA'].widget.attrs.update({
                 'placeholder': 'CGPA',
                 'class': 'form-control',
@@ -26,29 +36,25 @@ class StudentAcademicsForm(forms.ModelForm):
         self.fields['core_slots'].widget = forms.SelectMultiple(attrs={
                 'placeholder': 'No slots chosen',
                 'class': 'form-control',
-            },choices=Student.SLOT_CHOICES)
+            },choices=self.Meta.model.SLOT_CHOICES)
  
-    def clean_core_slots(self):
-        print(self.cleaned_data.get('core_slots'))
-        return self.cleaned_data.get('core_slots')
-
     def clean_current_CGPA(self):
         current_CGPA = self.cleaned_data.get('current_CGPA')
         if current_CGPA is None:
             raise ValidationError(_('This field is required'), code='empty')
         return current_CGPA
 
-    def clean_no_of_global_electives(self):
-        no_of_global_electives = self.cleaned_data.get('no_of_global_electives')
-        if no_of_global_electives is None:
-            raise ValidationError(_('This field is required'), code='empty')
-        return no_of_global_electives
-
     def clean_next_semester(self):
         next_semester = self.cleaned_data.get('next_semester')
         if next_semester is None:
             raise ValidationError(_('This field is required'), code='empty')
         return next_semester
+
+    def clean_no_of_global_electives(self):
+        no_of_global_electives = self.cleaned_data.get('no_of_global_electives')
+        if no_of_global_electives is None:
+            raise ValidationError(_('This field is required'), code='empty')
+        return no_of_global_electives
 
     def clean_submission_datetime(self):
         submission_datetime = datetime.now()

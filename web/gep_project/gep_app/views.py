@@ -41,8 +41,6 @@ def home(request):
 def student_home(request):
 	user = request.user
 	student = Student.objects.get(user=user)
-	#slots = Student.SLOT_CHOICES
-	#semesters = Student.SEMESTER_CHOICES
 	
 	if request.method == 'POST':
 		form = StudentAcademicsForm(request.POST, instance=student)
@@ -52,8 +50,6 @@ def student_home(request):
 		form = StudentAcademicsForm(instance=student)
 		
 	context = {
-		#'slots':slots,
-		#'semesters':semesters,
 		'student': student,
 		'form':form,
 	}

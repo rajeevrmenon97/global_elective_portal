@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block js_files %} 
+<script type="application/javascript" src="{% static 'gep_app/js/dropdown_multiple.js' %}"></script>
+{% endblock %}
+
+{% block main_content %}
+<div id="stage_1-container" class="container-fluid">
+	<a class="col-sm-12 text-right btn btn-link text-success" href="{% url 'logout' %}">Logout</a>
+	<div class="h4 col-sm-12 text-center text-success">Stage 1: Submission of Elective Preferances</div>
+	<form action="{% url 'student_home' %}" method="post">
+		{% csrf_token %}
+		
+		<input class="btn btn-success" type="submit" value="Submit"/>
+	</form>
+</div>
+{% endblock %}
