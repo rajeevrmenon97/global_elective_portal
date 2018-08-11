@@ -1,12 +1,8 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block js_files %} 
-<script type="application/javascript" src="{% static 'gep_app/js/dropdown_multiple.js' %}"></script>
-{% endblock %}
-
 {% block main_content %}
-<div id="stage_1-container" class="container-fluid">
+<div class="container-fluid">
 	<a class="col-sm-12 text-right btn btn-link text-success" href="{% url 'logout' %}">Logout</a>
 	<div class="h4 col-sm-12 text-center text-success">Stage 1: Submission of Academic Details</div>
 	<form action="{% url 'student_home' %}" method="post">
@@ -20,22 +16,22 @@
 			{{form.name}}
 		</div>
 		<div class="form-group">
+			<label class="form-label" for="id_next_semester">Registering semester</label>
+			{{form.next_semester}}
+			{{form.next_semester.errors}}
+		</div>
+		<div class="form-group">
 			<label class="form-label" for="id_current_CGPA">CGPA upto previous semester</label>
 			{{form.current_CGPA}}
 			{{form.current_CGPA.errors}}
 		</div>
 		<div class="form-group">
-			<label class="form-label" for="id_next_semester">Upcoming semester</label>
-			{{form.next_semester}}
-			{{form.next_semester.errors}}
-		</div>
-		<div class="form-group">
-			<label class="form-label" for="id_no_of_global_electives">Number of global electives to be taken in coming semester</label>
+			<label class="form-label" for="id_no_of_global_electives">Number of global electives to be taken in coming semester (Including overloading)</label>
 			{{form.no_of_global_electives}}
 			{{form.no_of_global_electives.errors}}
 		</div>
 		<div class="form-group">
-			<label class="form-label" for="id_core_slots">Slots of core courses to be taken in coming semester</label>
+			<label class="form-label" for="id_core_slots">Slots of core courses to be taken in coming semester (Including overloading)</label>
 			{{form.core_slots}}
 			{{form.core_slots.errors}}
 		</div>

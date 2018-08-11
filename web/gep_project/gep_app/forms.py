@@ -5,8 +5,6 @@ from .models import Student
 from datetime import datetime
 
 class StudentAcademicsForm(forms.ModelForm):
-    error_css_class = 'form-error-message'
-
     class Meta:
         model = Student
         fields = ['name','user','current_CGPA','next_semester','no_of_global_electives','core_slots','submission_datetime']

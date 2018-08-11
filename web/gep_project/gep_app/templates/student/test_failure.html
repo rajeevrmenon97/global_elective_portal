@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block main_content %}
+<div class="container-fluid">
+	<a class="col-sm-12 text-right btn btn-link text-success" href="{% url 'logout' %}">Logout</a>
+	<div class="h4 col-sm-12 col-md-8 offset-md-2 text-center text-danger mt-sm-5">Sorry you are not allowed to proceed to this stage as you have not completed the previous stages of allotment</div>
+	<div class="h6 col-sm-12 col-md-8 offset-md-2 text-center text-danger">(Contact Students Affairs Counsel for further information)</div>
+</div>
+{% endblock %}

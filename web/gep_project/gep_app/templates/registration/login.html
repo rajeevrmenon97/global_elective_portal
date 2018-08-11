@@ -9,7 +9,7 @@
 	location.href="{% url 'home' %}"
 {% endif %}
 </script>
-<div id="login-container" class="container-fluid bg-image">
+<div class="container-fluid bg-image">
 	<form class="col-lg-4 col-md-6 offset-lg-4 offset-md-3 form-container" action="{% url 'login' %}" method="post">
 		{% csrf_token %}
 		<div class="h1 text-center text-success mb-md-3">Login</div>

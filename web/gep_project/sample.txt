@@ -1,0 +1,22 @@
+from gep_app.models import *
+from django.contrib.auth import get_user_model
+u=get_user_model().objects.create(username='MH',email='mechanical@gmail.com')
+d=Department.objects.create(name='Mechanical Engineering',user=u)
+
+
+u=get_user_model().objects.create(username='SM',email='management@gmail.com')
+d=Department.objects.create(name='School of Management',user=u)
+
+u=get_user_model().objects.create(username='PNM',email='pournami@gmail.com')
+u.set_password('12345')
+u.save()
+f=Faculty.objects.create(name='Pournami N',dept=Department.objects.get(user='CS'),user=u)
+c=Course.objects.create(name='Image Processing',course_id='CS4002',dept=Department.objects.get(user='CS'),credits=3,cot_requisite=False,mode_of_allotment='FCFS')
+e=Elective.objects.create(faculty=f,course=c,slot='E')
+
+u=get_user_model().objects.get(username='SM3003')
+u.set_password('12345')
+u.save()
+f=Faculty.objects.create(name='Preethi',dept=Department.objects.get(user='SM'),user=u)
+c=Course.objects.create(name='French',course_id='SM4005',dept=Department.objects.get(user='SM'),credits=3,cot_requisite=False,mode_of_allotment='FCFS')
+e=Elective.objects.create(faculty=f,course=c,slot='F')

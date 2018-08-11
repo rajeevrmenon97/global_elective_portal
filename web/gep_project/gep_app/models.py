@@ -12,7 +12,7 @@ class User(AbstractUser):
     ROLE_CHOICES = ((STUDENT,'Student'),(FACULTY,'Faculty'),(DEPARTMENT,'Department'))
     
     username = models.CharField(max_length=10,primary_key=True)
-    password = models.CharField(max_length=100,default="12345")
+    password = models.CharField(max_length=100,blank=True,null=True)
     role = models.CharField(max_length=1,choices=ROLE_CHOICES)
     email = models.EmailField(max_length=100)
     USERNAME_FIELD = 'username'
@@ -75,31 +75,31 @@ class Course(models.Model):
     cgpa_cutoff = models.IntegerField(default=0,validators=[MinValueValidator(0), MaxValueValidator(10)])
     mode_of_allotment = models.CharField(max_length=4,choices=(('FCFS','First Come First Served'),
                                                                ('CGPA','Current CGPA'),))
-    faculty = models.ForeignKey(Faculty,blank=True,null=True, on_delete=models.SET_NULL)
 
     def __str__(self):
         return self.name + ' (' + self.course_id + ')'
 
-class Course_Slots(models.Model):
+class Elective(models.Model):
     SLOT_CHOICES = (('A','Slot A'),('B','Slot B'),('C','Slot C'),('D','Slot D'),('E','Slot E'),('F','Slot F'),('G','Slot G'),('H','Slot H'),('P','Slot P'),('Q','Slot Q'),('R','Slot R'),('S','Slot S'),('T','Slot T'),)
 
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     slot = models.CharField(max_length=1,choices=SLOT_CHOICES)
+    faculty = models.ForeignKey(Faculty,blank=True,null=True, on_delete=models.SET_NULL)
 
-class Course_Departments(models.Model):
-    course_slot =  models.ForeignKey(Course_Slots, on_delete=models.CASCADE) 
+class Elective_Department(models.Model):
+    elective =  models.ForeignKey(Elective, on_delete=models.CASCADE) 
     dept = models.ForeignKey(Department, on_delete=models.CASCADE)
     max_count = models.IntegerField()
 
 class Student_COT_Allotment(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
-    course_slot = models.ForeignKey(Course_Slots, on_delete=models.CASCADE)
+    elective = models.ForeignKey(Elective, on_delete=models.CASCADE)
 
 class Student_Elective_Allotment(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
-    course_slot = models.ForeignKey(Course_Slots, on_delete=models.CASCADE)
+    elective = models.ForeignKey(Elective, on_delete=models.CASCADE)
 
 class Student_Elective_Preference(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
-    course_slot = models.ForeignKey(Course_Slots, on_delete=models.CASCADE)
+    elective = models.ForeignKey(Elective, on_delete=models.CASCADE)
     priority_rank = models.IntegerField(validators=[MinValueValidator(0)])
