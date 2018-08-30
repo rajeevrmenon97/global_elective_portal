@@ -1,13 +1,14 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext as _
-from .models import Student
+from django.db.models import Q
+from .models import Student, Course
 from datetime import datetime
 
 class StudentAcademicsForm(forms.ModelForm):
     class Meta:
         model = Student
-        fields = ['name','user','current_CGPA','next_semester','no_of_global_electives','core_slots','submission_datetime']
+        fields = ['name','user','current_CGPA','next_semester','required_elective_count','core_slots','past_courses','submission_datetime']
 
     def __init__(self, *args, **kwargs):
         super(StudentAcademicsForm, self).__init__(*args, **kwargs)
@@ -27,8 +28,13 @@ class StudentAcademicsForm(forms.ModelForm):
                 'placeholder': 'Semester',
                 'class': 'form-control',
             })
-        self.fields['no_of_global_electives'].widget.attrs.update({
-                'placeholder': 'Number of global electives',
+        self.fields['required_elective_count'].widget.attrs.update({
+                'placeholder': 'Number of global electives to be taken',
+                'class': 'form-control',
+            })
+        self.fields['past_courses'].widget.queryset = Course.objects.all().order_by('name')
+        self.fields['past_courses'].widget.attrs.update({
+                'placeholder': 'No courses choosen',
                 'class': 'form-control',
             })
         self.fields['core_slots'].widget = forms.SelectMultiple(attrs={
@@ -48,11 +54,11 @@ class StudentAcademicsForm(forms.ModelForm):
             raise ValidationError(_('This field is required'), code='empty')
         return next_semester
 
-    def clean_no_of_global_electives(self):
-        no_of_global_electives = self.cleaned_data.get('no_of_global_electives')
-        if no_of_global_electives is None:
+    def clean_required_elective_count(self):
+        required_elective_count = self.cleaned_data.get('required_elective_count')
+        if required_elective_count is None:
             raise ValidationError(_('This field is required'), code='empty')
-        return no_of_global_electives
+        return required_elective_count
 
     def clean_submission_datetime(self):
         submission_datetime = datetime.now()

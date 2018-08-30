@@ -15,6 +15,7 @@
 			<thead>
 			<tr>
 			    <th scope="col">#</th>
+				<th scope="col">Course ID</th>
 				<th scope="col">Course</th>
 				<th scope="col">Department</th>
 				<th scope="col">Slot</th>
@@ -25,6 +26,7 @@
 				{% for elective in electives %}
 				<tr class="sortable-element">
 					<td><input name="{{elective.id}}" class="sortable-input text-center" type=number min=1 max={{electives|length}} value={{forloop.counter}}></td>
+					<td>{{elective.course.course_id}}</td>
 					<td>{{elective.course.name}}</td>
 					<td>{{elective.course.dept.name}}</td>
 					<td>{{elective.slot}}</td>

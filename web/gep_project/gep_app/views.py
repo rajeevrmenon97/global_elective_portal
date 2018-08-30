@@ -4,8 +4,9 @@ from django.http import Http404
 from django.contrib.auth import authenticate, login as auth_login , logout as auth_logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db.models import Q
-from .models import Student, Elective, Student_Elective_Preference
+from .models import Student, Elective, Elective_Preference, COT_Allotment
 from .forms import StudentAcademicsForm
+from .allotment import *
 
 def login(request):
 	if request.method == 'POST':
@@ -70,27 +71,37 @@ def get_eligible_electives(student):
 	electives = Elective.objects.all().order_by('slot', 'course__dept__name')
 	#Filter global electives
 	global_electives = electives.filter(~Q(course__dept=student.dept))
+	#Filter out electives that were already taken
+	print(student.past_courses.all())
+	not_taken_electives = global_electives.filter(~Q(course__in=student.past_courses.all()))
 	#Filter out electives offered in slots of core courses
-	slot_satisfied_electives = global_electives.filter(~Q(slot__in=student.core_slots))
+	slot_satisfied_electives = not_taken_electives.filter(~Q(slot__in=student.core_slots))
 	#Filter electives with CGPA requirement satisfied
 	cgpa_satisfied_electives = slot_satisfied_electives.filter(course__cgpa_cutoff__lte=student.current_CGPA)
 	#Filter electives with COT requirement satisfied
-	cot_satisfied_electives = [elective for elective in cgpa_satisfied_electives if not elective.course.cot_requisite or Student_COT_Allotment.objects.filter(student=student,elective=elective).exists()]
-	return electives
+	cot_satisfied_electives = [elective for elective in cgpa_satisfied_electives if not elective.course.cot_requisite or COT_Allotment.objects.filter(student=student,elective=elective).exists()]
+	return cot_satisfied_electives
 
 @login_required
 @user_passes_test(student_check)
 def test_failure(request):
 	return render(request, 'student/test_failure.html')
 
-def preference_list_check(student):
+def preference_list_check(student,elective_id=None):
 	"""Checks whether the student has submitted the elective preference list"""
-	return Student_Elective_Preference.objects.filter(student=student).exists()
+	if elective_id is None:
+		return Elective_Preference.objects.filter(student=student).exists()
+	else:
+		return Elective_Preference.objects.filter(student=student,elective_id=elective_id).exists()
 
 def get_preference_list(student):
 	"""Returns elective preference list submitted by the student"""
-	elective_ids = Student_Elective_Preference.objects.filter(student=student).order_by('priority_rank').values_list('elective',flat=True)
-	return Elective.objects.filter(pk__in=elective_ids)
+	elective_ids = Elective_Preference.objects.filter(student=student).order_by('priority_rank').values_list('elective',flat=True)
+	electives = Elective.objects.filter(pk__in=elective_ids)
+	newly_added_electives = list(set(get_eligible_electives(student)) - set(electives))
+	removed_electives = list(set(electives) - set(get_eligible_electives(student)))
+	list(electives).extend(newly_added_electives)
+	return [elective for elective in electives if elective not in removed_electives]
 
 @login_required
 @user_passes_test(student_check)
@@ -99,15 +110,21 @@ def preference_submission(request):
 	user = request.user
 	student = Student.objects.get(user=user)
 	if request.method == 'POST':
+		elective_ids = Elective.objects.all().values_list('id',flat=True)
 		for key, value in request.POST.items():
-			if key not in Elective.objects.all().values_list('id',flat=True):
+			try:
+				elective_id = int(key)
+			except ValueError:
 				continue
-			if preference_list_check(student):
-				allotment = Student_Elective_Preference.objects.get(student=student, elective_id=key)
+			if elective_id not in elective_ids:
+				continue
+			if preference_list_check(student,elective_id):
+				allotment = Elective_Preference.objects.get(student=student, elective_id=elective_id)
 				allotment.priority_rank = value
 				allotment.save()
 			else:
-				allotment = Student_Elective_Preference.objects.create(student=student, elective_id=key, priority_rank=value)
+				allotment = Elective_Preference.objects.create(student=student, elective_id=elective_id, priority_rank=value)
+				
 	electives = get_preference_list(student) if preference_list_check(student) else get_eligible_electives(student)
 	context = {
 		'electives':electives,
