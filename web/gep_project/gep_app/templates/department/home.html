@@ -1,53 +1,107 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block js_files %} 
-<script type="application/javascript" src="{% static 'gep_app/js/dropdown.js' %}"></script>
+{% block js_files %}
+<script type="application/javascript" src="{% static 'gep_app/js/addSlot.js' %}"></script>
 {% endblock %}
 
 {% block main_content %}
-<div id="stage_1-container" class="container-fluid">
-	<a class="col-sm-12 text-right btn btn-link text-success">Logout</a>
-	<div class="h4 col-sm-12 text-center text-success">Stage 1: Submission of Academic Details</div>
-	<form action="#" method="post">
+<div class="container-fluid">
+	<div class="row">
+	<nav class="col-9 navbar navbar-expand-sm navbar-light mb-3 style="background-color: transparent;"">
+	  <button class="navbar-toggler navbar-toggler-small" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+		<span class="navbar-toggler-icon navbar-toggler-icon-small"></span>
+	  </button>
+
+	  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+		<ul class="navbar-nav mr-auto">
+		  <li class="nav-item active">
+			<a class="nav-link" href="#">Home</a>
+		  </li>
+		  <li class="nav-item">
+			<a class="nav-link" href="#">Add Elective</a>
+		  </li>
+		  <li class="nav-item">
+			<a class="nav-link" href="#">Edit Elective</a>
+		  </li>
+		  <li class="nav-item">
+			<a class="nav-link" href="#">View Allotment</a>
+		  </li>
+		</ul>
+	  </div>
+	</nav>
+    <a class="col-3 text-right btn btn-link text-success" href="{% url 'logout' %}">Logout</a>
+	</div>
+	<form action="{% url 'department_home' %}" method="post">
 		{% csrf_token %}
-		<div class="form-group">
-			<label class="form-label" for="name">Name</label>
-			<input class="form-control disabled" disabled type="text" name="name" value="{{student.name}}"/>
-		</div>
-		<div class="form-group">
-			<label class="form-label" for="username">Roll Number</label>
-			<input class="form-control disabled" disabled type="text" name="username" readonly="readonly" value="{{student.roll_number}}"/>
-		</div>
-		<div class="form-group">
-			<label class="form-label" for="next_semester">Upcoming semester</label>
-			<input class="form-control" type="number" placeholder="Semester" name="next_semester" min=0 max=10 required/>
-		</div>
-		<div class="form-group">
-			<label class="form-label" for="current_CGPA">CGPA upto previous semester</label>
-			<input class="form-control" type="number" placeholder="CGPA" name="current_CGPA" min=0 max=10 required/>
-		</div>
-		<div class="form-group">
-			<label class="form-label" for="no_global_electives">Number of global electives to be taken in coming semester</label>
-			<input class="form-control" type="number" placeholder="Number of global electives" name="no_global_electives" required/>
-		</div>
-		<div class="form-group">
-			<label class="form-label" for="core-slots-dropdown">Slots of core courses to be taken in coming semester</label>
-			<div class="dropdown" id="core-slots-dropdown">
-				<div class="dropdown-toggle form-control" id="core-slots-dropdown-btn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Choose Slots</div>
-				<div class="dropdown-menu" aria-labelledby="core-slots-dropdown-btn">
-					{% for slot in slots %}
-					<div class="form-check dropdown-item ml-md-4">
-					    <input class="form-check-input" type="checkbox" name="slot_{{slot}}" id="slot_{{slot}}" value="slot_{{slot}}">
-					    <label class="form-check-label" for="slot_{{slot}}">
-						Slot {{slot}}
-					  </label>
-					</div>
+		<table class="table table-hover">
+			<tbody>
+				<tr>
+					<td><label class="form-label" for="id_{{form.course_id.name}}">{{form.course_id.label}}</label></td>
+					<td>{{ form.course_id}}{{form.course_id.errors}}</td>
+				</tr>
+				<tr>
+					<td><label class="form-label" for="id_{{form.name.name}}">{{form.name.label}}</label></td>
+					<td>{{form.name}}{{form.name.errors}}</td>
+				</tr>
+				<tr>
+					<td><label class="form-label" for="id_dept">Department</label></td>
+					<td><div class="form-control form-control-disabled">{{user_dept}}</div></td>
+				</tr>
+				<tr>
+					<td><label class="form-label" for="id_{{form.credits.name}}">{{form.credits.label}}</td>
+					<td>{{form.credits}}{{form.credits.errors}}</td>
+				</tr>
+				<tr>
+					<td><label class="form-label" for="id_{{form.pre_requisites.name}}">{{form.pre_requisites.label}}</label></td>
+					<td>{{form.pre_requisites}}{{form.pre_requisites.errors}}</td>
+				</tr>
+				<tr>
+					<td><label class="form-label" for="id_{{form.cot_requisite.name}}">{{form.cot_requisite.label}}</label></td>
+					<td>{{form.cot_requisite}}{{form.cot_requisite.errors}}</td>
+				</tr>
+				<tr>
+					<td><label class="form-label" for="id_{{form.cgpa_cutoff.name}}">{{form.cgpa_cutoff.label}}</label></td>
+					<td>{{form.cgpa_cutoff}}{{form.cgpa_cutoff.errors}}</td>
+				</tr>
+				<tr>
+					<td><label class="form-label" for="id_{{form.mode_of_allotment.name}}">{{form.mode_of_allotment.label}}</label></td>
+					<td>{{form.mode_of_allotment}}{{form.mode_of_allotment.errors}}</td>
+				</tr>				
+			</tbody>
+		</table>
+		{{ elective_formset.management_form }}
+		{{ elective_seats_formset.management_form }}
+		<div class="slot-set">
+			<div class="form-label text-center">Slot Distribution</div>
+			<table class="table table-hover">
+				<tbody>
+					{% for elective_form in elective_formset %}
+					<tr>
+						<td><label class="form-label" for="id_{{elective_form.slot.name}}">{{elective_form.slot.label}}</label></td>
+						<td>{{elective_form.slot}}{{elective_form.slot.errors}}</td>
+					</tr>
+					<tr>
+						<td><label class="form-label" for="id_{{elective_form.faculty.name}}">{{elective_form.faculty.label}}</label></td>
+						<td>{{elective_form.faculty}}{{elective_form.faculty.errors}}</td>
+					</tr>
+				</tbody>
+			</table>
+			<div class="form-label text-center">Maximum Seats Available</div>
+			<table class="table table-hover">
+				<tbody>
+					{% for elective_seats_form in elective_seats_formset %}
+					<tr>
+						<td>{{elective_seats_form.dept}}</td>
+						<td>{{elective_seats_form.max_seats}}{{elective_seats_form.max_seats.errors}}</td>
+					</tr>
+					{% endfor %}				
 					{% endfor %}
-			    </div>
-			</div>
+				</tbody>
+			</table>
 		</div>
-		<input class="btn btn-success" type="submit" value="Submit"/>
+		<input id="add-slot" class="btn btn-light border-grey" type="button" value="Add slot">
+		<div class="text-center"><input class="btn btn-success" type="submit" value="Submit"/></div>
 	</form>
 </div>
 {% endblock %}

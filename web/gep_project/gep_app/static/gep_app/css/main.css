@@ -59,6 +59,10 @@ html,body {
 	border-radius: .25rem;
 }
 
+.form-control-disabled {
+	background-color: #eee;
+}
+
 .form-control-transparent {
 	background-color: transparent !important;
 }
@@ -71,6 +75,25 @@ html,body {
 .form-check-input {
 	position: relative;
 	margin-left: -.25rem;
+}
+
+.navbar-toggler.navbar-toggler-small {
+	padding: 0 5px;
+}
+
+.navbar-toggler-icon.navbar-toggler-icon-small {
+    width: 20px;
+    height: 27px;
+}
+
+.border-grey {
+	border: 1px solid #d3d9df;
+}
+
+.checkbox-big {
+	height: 20px;
+	width: 20px;
+	margin-left: 5px;
 }
 
 @media screen and (max-width: 400px){
