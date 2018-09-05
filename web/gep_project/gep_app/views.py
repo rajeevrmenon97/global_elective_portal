@@ -4,10 +4,8 @@ from django.http import Http404
 from django.contrib.auth import authenticate, login as auth_login , logout as auth_logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db.models import Q
-from .models import Student, Elective, Elective_Preference, COT_Allotment
-from .forms import StudentAcademicsForm, CourseCreationForm, ElectiveCreationForm, ElectiveSeatsCreationForm
-from .allotment import *
-from django.forms import formset_factory
+from .models import Student, Elective, Faculty, Department, Elective_Preference, COT_Allotment
+from .forms import StudentAcademicsForm, CourseCreationForm, AddElectiveForm
 
 def login(request):
 	if request.method == 'POST':
@@ -145,32 +143,27 @@ def faculty_home(request):
 def department_home(request):
 	user = request.user
 	user_dept = Department.objects.get(user=user)
-	depts = Department.objects.all()
-	initial_data = []
-	for dept in depts:
-		initial_data.append({
-			'dept':dept
-		})
-	ElectiveCreationFormSet = formset_factory(ElectiveCreationForm)
-	ElectiveSeatsCreationFormSet = formset_factory(ElectiveSeatsCreationForm)
-	
+	depts = Department.objects.all()	
+	slots = Elective.SLOT_CHOICES
+	faculties = Faculty.objects.all().order_by('name')	
 
 	if request.method == 'POST':
 		print(request.POST)
 		course_form = CourseCreationForm(request.POST)
-		if course_form.is_valid():
+		hidden_form = AddElectiveForm(request.POST)
+		if course_form.is_valid() and hidden_form.is_valid():
 			course_form.save(user_dept)
 	else:
 		course_form = CourseCreationForm()
-		elective_formset = ElectiveCreationFormSet()
-		elective_seats_formset = ElectiveSeatsCreationFormSet(initial=initial_data)
+		hidden_form = AddElectiveForm()
 
 	context = {
 		'user_dept':user_dept,
 		'depts':depts,
+		'slots':slots,
+		'faculties':faculties,
 		'form':course_form,
-		'elective_formset':elective_formset,
-		'elective_seats_formset':elective_seats_formset,
+		'hidden_form':hidden_form,
 	}
 	return render(request, 'department/home.html', context)
 	

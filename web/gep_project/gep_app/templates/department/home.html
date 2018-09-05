@@ -2,7 +2,8 @@
 {% load static %}
 
 {% block js_files %}
-<script type="application/javascript" src="{% static 'gep_app/js/addSlot.js' %}"></script>
+<script type="application/javascript" src="{% static 'gep_app/js/add_slot.js' %}"></script>
+<script type="application/javascript" src="{% static 'gep_app/js/set_elective_data.js' %}"></script>
 {% endblock %}
 
 {% block main_content %}
@@ -70,38 +71,47 @@
 				</tr>				
 			</tbody>
 		</table>
-		{{ elective_formset.management_form }}
-		{{ elective_seats_formset.management_form }}
-		<div class="slot-set">
-			<div class="form-label text-center">Slot Distribution</div>
+		<div class="form-set">
+			<div class="form-label form-label-title  text-center">Slots <input class="add-slot btn btn-success btn-small" type="button" value="+"></div>
 			<table class="table table-hover">
 				<tbody>
-					{% for elective_form in elective_formset %}
 					<tr>
-						<td><label class="form-label" for="id_{{elective_form.slot.name}}">{{elective_form.slot.label}}</label></td>
-						<td>{{elective_form.slot}}{{elective_form.slot.errors}}</td>
+						<td><label class="form-label" for="id_form-0-slot">Slot</label></td>
+						<td>
+							<select class="form-control form-set-slot" id="id_form-0-slot">
+								{% for slot in slots %}
+								<option value="{{slot.0}}">{{slot.1}}</option>
+								{% endfor %}
+							</select>
+						</td>
 					</tr>
 					<tr>
-						<td><label class="form-label" for="id_{{elective_form.faculty.name}}">{{elective_form.faculty.label}}</label></td>
-						<td>{{elective_form.faculty}}{{elective_form.faculty.errors}}</td>
+						<td><label class="form-label" for="id_form-0-faculty">Faculty</label></td>
+						<td>
+							<select class="form-control form-set-faculty" id="id_form-0-faculty">
+								{% for faculty in faculties %}
+								<option value="{{faculty.pk}}">{{faculty.name}}</option>
+								{% endfor %}
+							</select>
+						</td>
 					</tr>
 				</tbody>
 			</table>
-			<div class="form-label text-center">Maximum Seats Available</div>
+			<div class="form-label form-label-title text-center">Maximum Seats Available</div>
 			<table class="table table-hover">
 				<tbody>
-					{% for elective_seats_form in elective_seats_formset %}
+					{% for dept in depts %}
 					<tr>
-						<td>{{elective_seats_form.dept}}</td>
-						<td>{{elective_seats_form.max_seats}}{{elective_seats_form.max_seats.errors}}</td>
+						<td><label class="form-label" for="id_form-0-dept-{{dept.pk}}">{{dept.name}}</label></td>
+						<td><input id="id_form-0-dept-{{dept.pk}}" type=number class="form-control form-set-dept" min=0 value="0"></td>
 					</tr>
-					{% endfor %}				
 					{% endfor %}
 				</tbody>
 			</table>
 		</div>
-		<input id="add-slot" class="btn btn-light border-grey" type="button" value="Add slot">
-		<div class="text-center"><input class="btn btn-success" type="submit" value="Submit"/></div>
+		{{hidden_form.elective_data}}
+		{{hidden_form.elective_data.errors}}
+		<div class="text-center"><input id="form-submit" class="btn btn-success" type="submit" value="Submit"/></div>
 	</form>
 </div>
 {% endblock %}

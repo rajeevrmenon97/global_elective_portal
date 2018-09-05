@@ -4,6 +4,7 @@ from django.utils.translation import gettext as _
 from django.db.models import Q
 from .models import Student, Course, Elective, Elective_Seats, Faculty
 from datetime import datetime
+import json
 
 class StudentAcademicsForm(forms.ModelForm):
 	class Meta:
@@ -122,11 +123,8 @@ class CourseCreationForm(forms.ModelForm):
 		
 
 class AddElectiveForm(forms.Form):
-	elective_data = forms.CharField(max_length=5000, attrs={
-				'class': 'form-control',
-				'required': True,
-			})
-	
+	elective_data = forms.CharField(max_length=5000, widget = forms.HiddenInput())
+		
 	def clean_elective_data(self):
 		elective_data = self.cleaned_data.get('elective_data')
 		try:
@@ -134,14 +132,17 @@ class AddElectiveForm(forms.Form):
 		except:
 			raise forms.ValidationError("Invalid data")
 
+		print(json_data)
+		
 		for slot_data in json_data:
 			slot = slot_data['slot']
-			faculty = slot_data['faculty']
-			print(slot)
-			print(faculty)
+			faculty = int(slot_data['faculty'])
+			elective_form = ElectiveCreationForm(initial={'slot':slot,'faculty':faculty})
+			print(elective_form.is_valid())
+			max_seats = slot_data['max_seats']
 			for dept, max_seat in max_seats.items():
-				print(dept)
-				print(max_seat)
+				pass
+			raise forms.ValidationError("Check data")
 		return elective_data
 		
 #	def save(self, course, commit=True):
@@ -154,17 +155,19 @@ class ElectiveCreationForm(forms.ModelForm):
 	class Meta:
 		model = Elective
 		fields = ['slot','faculty']
-
+		
+		
 	def __init__(self, *args, **kwargs):
 		super(ElectiveCreationForm, self).__init__(*args, **kwargs)
+		print(self.data)
 		
-		self.fields['slot'].widget.attrs.update({
-				'class': 'form-control',
-           })
-		self.fields['faculty'].queryset = Faculty.objects.all().order_by('name')
-		self.fields['faculty'].widget.attrs.update({
-				'class': 'form-control',
-			})
+	def clean_slot(self):
+		print(self.cleaned_data.get('slot'))
+		return self.cleaned_data.get('slot')
+		
+	def clean_faculty(self):
+		print(self.cleaned_data.get('faculty'))
+		return self.cleaned_data.get('faculty')
 		
 	def save(self, course, commit=True):
 		self.instance.course = course
@@ -175,16 +178,6 @@ class ElectiveSeatsCreationForm(forms.ModelForm):
 	class Meta:
 		model = Elective_Seats
 		fields = ['dept','max_seats']
-
-	def __init__(self, *args, **kwargs):
-		super(ElectiveSeatsCreationForm, self).__init__(*args, **kwargs)
-		
-		self.fields['dept'].widget.attrs.update({
-				'class': 'form-control',
-           })
-		self.fields['max_seats'].widget.attrs.update({
-				'class': 'form-control',
-			})
 		
 	def save(self, elective, commit=True):
 		self.instance.elective = elective

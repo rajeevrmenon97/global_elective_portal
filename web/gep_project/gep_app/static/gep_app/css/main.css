@@ -90,6 +90,16 @@ html,body {
 	border: 1px solid #d3d9df;
 }
 
+.btn-small {
+	font-size: 12px;
+	padding: 0 6px;
+}
+
+.form-label-title {
+	text-transform: uppercase;
+	margin-bottom: 5px;
+}
+
 .checkbox-big {
 	height: 20px;
 	width: 20px;
