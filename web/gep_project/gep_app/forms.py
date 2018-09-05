@@ -2,6 +2,8 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext as _
 from django.db.models import Q
+from django.forms.models import inlineformset_factory
+from django.forms.models import BaseInlineFormSet
 from .models import Student, Course, Elective, Elective_Seats, Faculty
 from datetime import datetime
 import json
@@ -121,6 +123,25 @@ class CourseCreationForm(forms.ModelForm):
 		self.instance.dept = dept
 		return super().save()
 		
+
+class BaseChildrenFormset(BaseInlineFormSet):
+    def add_fields(self, form, index):
+        super(BaseChildrenFormset, self).add_fields(form, index)
+
+        # save the formset in the 'nested' property
+        form.nested = ElectiveSeatFormset(
+                        instance=form.instance,
+                        data=form.data if form.is_bound else None,
+                        files=form.files if form.is_bound else None,
+#                        prefix='address-%s-%s' % (
+#                            form.prefix,
+#                            AddressFormset.get_default_prefix()),
+                        extra=1)
+
+
+ElectiveFormset = inlineformset_factory(models.Course, models.Elective, formset=BaseChildrenFormset, extra=1)
+ElectiveSeatFormset = inlineformset_factory(models.Elective, models.Elective_Seat, extra=1)
+
 
 class AddElectiveForm(forms.Form):
 	elective_data = forms.CharField(max_length=5000, widget = forms.HiddenInput())
