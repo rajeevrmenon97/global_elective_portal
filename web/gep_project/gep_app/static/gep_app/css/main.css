@@ -105,6 +105,12 @@ html,body {
 	width: 20px;
 	margin-left: 5px;
 }
+/*
+
+#new-elective {
+	display: none;
+}
+*/
 
 @media screen and (max-width: 400px){
 	#login-container .form-container,#change-password-container .form-container {

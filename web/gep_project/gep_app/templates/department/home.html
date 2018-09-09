@@ -2,8 +2,7 @@
 {% load static %}
 
 {% block js_files %}
-<script type="application/javascript" src="{% static 'gep_app/js/add_slot.js' %}"></script>
-<script type="application/javascript" src="{% static 'gep_app/js/set_elective_data.js' %}"></script>
+<script type="application/javascript" src="{% static 'gep_app/js/ajax/add_elective.js' %}"></script>
 {% endblock %}
 
 {% block main_content %}
@@ -33,85 +32,104 @@
 	</nav>
     <a class="col-3 text-right btn btn-link text-success" href="{% url 'logout' %}">Logout</a>
 	</div>
-	<form action="{% url 'department_home' %}" method="post">
+	{% if not is_course_submitted %}
+	<form id="course-form" action="{% url 'sac_home' %}" method="post">
 		{% csrf_token %}
 		<table class="table table-hover">
 			<tbody>
 				<tr>
-					<td><label class="form-label" for="id_{{form.course_id.name}}">{{form.course_id.label}}</label></td>
-					<td>{{ form.course_id}}{{form.course_id.errors}}</td>
+					<td><label class="form-label" for="id_{{course_form.course_id.name}}">{{course_form.course_id.label}}</label></td>
+					<td>{{ course_form.course_id}}{{course_form.course_id.errors}}</td>
 				</tr>
 				<tr>
-					<td><label class="form-label" for="id_{{form.name.name}}">{{form.name.label}}</label></td>
-					<td>{{form.name}}{{form.name.errors}}</td>
+					<td><label class="form-label" for="id_{{course_form.name.name}}">{{course_form.name.label}}</label></td>
+					<td>{{course_form.name}}{{course_form.name.errors}}</td>
 				</tr>
 				<tr>
-					<td><label class="form-label" for="id_dept">Department</label></td>
-					<td><div class="form-control form-control-disabled">{{user_dept}}</div></td>
+					<td><label class="form-label" for="id_{{course_form.dept.name}}">{{course_form.dept.label}}</label></td>
+					<td>{{course_form.dept}}{{course_form.dept.errors}}</td>
 				</tr>
 				<tr>
-					<td><label class="form-label" for="id_{{form.credits.name}}">{{form.credits.label}}</td>
-					<td>{{form.credits}}{{form.credits.errors}}</td>
+					<td><label class="form-label" for="id_{{course_form.credits.name}}">{{course_form.credits.label}}</label></td>
+					<td>{{course_form.credits}}{{course_form.credits.errors}}</td>
 				</tr>
 				<tr>
-					<td><label class="form-label" for="id_{{form.pre_requisites.name}}">{{form.pre_requisites.label}}</label></td>
-					<td>{{form.pre_requisites}}{{form.pre_requisites.errors}}</td>
+					<td><label class="form-label" for="id_{{course_form.pre_requisites.name}}">{{course_form.pre_requisites.label}}</label></td>
+					<td>{{course_form.pre_requisites}}{{course_form.pre_requisites.errors}}</td>
 				</tr>
 				<tr>
-					<td><label class="form-label" for="id_{{form.cot_requisite.name}}">{{form.cot_requisite.label}}</label></td>
-					<td>{{form.cot_requisite}}{{form.cot_requisite.errors}}</td>
+					<td><label class="form-label" for="id_{{course_form.cot_requisite.name}}">{{course_form.cot_requisite.label}}</label></td>
+					<td>{{course_form.cot_requisite}}{{course_form.cot_requisite.errors}}</td>
 				</tr>
 				<tr>
-					<td><label class="form-label" for="id_{{form.cgpa_cutoff.name}}">{{form.cgpa_cutoff.label}}</label></td>
-					<td>{{form.cgpa_cutoff}}{{form.cgpa_cutoff.errors}}</td>
+					<td><label class="form-label" for="id_{{course_form.cgpa_cutoff.name}}">{{course_form.cgpa_cutoff.label}}</label></td>
+					<td>{{course_form.cgpa_cutoff}}{{course_form.cgpa_cutoff.errors}}</td>
 				</tr>
 				<tr>
-					<td><label class="form-label" for="id_{{form.mode_of_allotment.name}}">{{form.mode_of_allotment.label}}</label></td>
-					<td>{{form.mode_of_allotment}}{{form.mode_of_allotment.errors}}</td>
+					<td><label class="form-label" for="id_{{course_form.mode_of_allotment.name}}">{{course_form.mode_of_allotment.label}}</label></td>
+					<td>{{course_form.mode_of_allotment}}{{course_form.mode_of_allotment.errors}}</td>
 				</tr>				
 			</tbody>
 		</table>
-		<div class="form-set">
-			<div class="form-label form-label-title  text-center">Slots <input class="add-slot btn btn-success btn-small" type="button" value="+"></div>
-			<table class="table table-hover">
-				<tbody>
-					<tr>
-						<td><label class="form-label" for="id_form-0-slot">Slot</label></td>
-						<td>
-							<select class="form-control form-set-slot" id="id_form-0-slot">
-								{% for slot in slots %}
-								<option value="{{slot.0}}">{{slot.1}}</option>
-								{% endfor %}
-							</select>
-						</td>
-					</tr>
-					<tr>
-						<td><label class="form-label" for="id_form-0-faculty">Faculty</label></td>
-						<td>
-							<select class="form-control form-set-faculty" id="id_form-0-faculty">
-								{% for faculty in faculties %}
-								<option value="{{faculty.pk}}">{{faculty.name}}</option>
-								{% endfor %}
-							</select>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-			<div class="form-label form-label-title text-center">Maximum Seats Available</div>
-			<table class="table table-hover">
-				<tbody>
-					{% for dept in depts %}
-					<tr>
-						<td><label class="form-label" for="id_form-0-dept-{{dept.pk}}">{{dept.name}}</label></td>
-						<td><input id="id_form-0-dept-{{dept.pk}}" type=number class="form-control form-set-dept" min=0 value="0"></td>
-					</tr>
-					{% endfor %}
-				</tbody>
-			</table>
-		</div>
-		{{hidden_form.elective_data}}
-		{{hidden_form.elective_data.errors}}
-		<div class="text-center"><input id="form-submit" class="btn btn-success" type="submit" value="Submit"/></div>
+		<input id="course-submit" class="btn btn-success pl-4 pr-4" type="submit" value="Next"/>
 	</form>
+	{% endif %}
+	{% if is_course_submitted %}
+	<div id="course" class="h5 col-12 text-center text-success">{{course.course_id}}</div>
+	<table class="table table-hover">
+		<thead>
+			<tr>
+				<th>Slot</th>
+				<th>Faculty</th>
+				<th>Seats Available</th>
+			</tr>			
+		</thead>
+		<tbody>
+			{% for elective in electives %}
+			<tr>
+				<td>{{ elective.get_slot_display }}</td>
+				<td>{{ elective.faculty|default_if_none:"Not Alloted" }}</td>
+				<td><table class="table">
+					<tbody>
+					{% for elective_seat in elective_seats %}
+					{% if elective_seat.elective == elective %}
+					<tr>
+					<td>{{ elective_seat.dept }}</td>	
+					<td>{{ elective_seat.max_seats }}</td>	
+						</tr>
+					{% endif %}
+					{% endfor %}
+					</tbody>
+					</table>
+				</td>
+				<td><input id="remove-elective" class="btn btn-danger" type="button" value="Remove"></td>
+			</tr>
+			{% endfor %}
+			<tr id="new-elective">
+				<form id="elective-form" action="{% url 'add_elective' %}" method="post">
+					{% csrf_token %}
+					<td>{{ elective_form.slot }}</td>
+					<td>{{ elective_form.faculty}}</td>
+					<td><table class="table">
+						<tbody>
+						{{ elective_seats_formset.management_form }}
+						{% for elective_seat_form in elective_seats_formset %}
+						<tr>
+						<td class="dept">{{elective_seat_form.dept}}</td>
+						<td>{{elective_seat_form.max_seats}}</td>
+						</tr>
+						{% endfor %}
+						</tbody>
+						</table>
+					</td>
+					<td><input id="add-elective" class="btn btn-success pl-4 pr-4" type="button" value="Add"></td>
+				</form>
+				<script>$('.dept input').each(function(index) {
+							$(this).val({{depts.index}})
+						})</script>
+			</tr>
+		</tbody>
+	</table>
+	{% endif %}
 </div>
 {% endblock %}

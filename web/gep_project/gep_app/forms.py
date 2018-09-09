@@ -1,10 +1,9 @@
 from django import forms
+from django.forms import formset_factory
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext as _
 from django.db.models import Q
-from django.forms.models import inlineformset_factory
-from django.forms.models import BaseInlineFormSet
-from .models import Student, Course, Elective, Elective_Seats, Faculty
+from .models import Student, Course, Elective, Elective_Seats, Faculty, Department
 from datetime import datetime
 import json
 
@@ -79,7 +78,7 @@ class StudentAcademicsForm(forms.ModelForm):
 class CourseCreationForm(forms.ModelForm):	
 	class Meta:
 		model = Course
-		fields = ['course_id','name','credits','pre_requisites','cot_requisite','cgpa_cutoff','mode_of_allotment']
+		fields = ['course_id','name','dept','credits','pre_requisites','cot_requisite','cgpa_cutoff','mode_of_allotment']
 
 	def __init__(self, *args, **kwargs):
 		super(CourseCreationForm, self).__init__(*args, **kwargs)
@@ -92,6 +91,10 @@ class CourseCreationForm(forms.ModelForm):
 		self.fields['name'].label = 'Course Name'
 		self.fields['name'].widget.attrs.update({
 				'placeholder': 'Course Name',
+				'class': 'form-control',
+			})
+		self.fields['dept'].label = 'Department'
+		self.fields['dept'].widget.attrs.update({
 				'class': 'form-control',
 			})
 		self.fields['credits'].label = 'Number of credits'
@@ -117,118 +120,53 @@ class CourseCreationForm(forms.ModelForm):
 		self.fields['mode_of_allotment'].label = 'Mode of allotment'
 		self.fields['mode_of_allotment'].widget.attrs.update({
 				'class': 'form-control',
-			})
-		
-	def save(self, dept, commit=True):
-		self.instance.dept = dept
-		return super().save()
-		
-
-class BaseChildrenFormset(BaseInlineFormSet):
-    def add_fields(self, form, index):
-        super(BaseChildrenFormset, self).add_fields(form, index)
-
-        # save the formset in the 'nested' property
-        form.nested = ElectiveSeatFormset(
-                        instance=form.instance,
-                        data=form.data if form.is_bound else None,
-                        files=form.files if form.is_bound else None,
-#                        prefix='address-%s-%s' % (
-#                            form.prefix,
-#                            AddressFormset.get_default_prefix()),
-                        extra=1)
-
-
-ElectiveFormset = inlineformset_factory(models.Course, models.Elective, formset=BaseChildrenFormset, extra=1)
-ElectiveSeatFormset = inlineformset_factory(models.Elective, models.Elective_Seat, extra=1)
-
-
-class AddElectiveForm(forms.Form):
-	elective_data = forms.CharField(max_length=5000, widget = forms.HiddenInput())
-		
-	def clean_elective_data(self):
-		elective_data = self.cleaned_data.get('elective_data')
-		try:
-			json_data = json.loads(elective_data) 
-		except:
-			raise forms.ValidationError("Invalid data")
-
-		print(json_data)
-		
-		for slot_data in json_data:
-			slot = slot_data['slot']
-			faculty = int(slot_data['faculty'])
-			elective_form = ElectiveCreationForm(initial={'slot':slot,'faculty':faculty})
-			print(elective_form.is_valid())
-			max_seats = slot_data['max_seats']
-			for dept, max_seat in max_seats.items():
-				pass
-			raise forms.ValidationError("Check data")
-		return elective_data
-		
-#	def save(self, course, commit=True):
-#		self.instance.course = course
-#		return super().save()
-
-		
+			})		
 
 class ElectiveCreationForm(forms.ModelForm):	
 	class Meta:
 		model = Elective
-		fields = ['slot','faculty']
-		
-		
+		fields = ['course','slot','faculty']
+	
 	def __init__(self, *args, **kwargs):
 		super(ElectiveCreationForm, self).__init__(*args, **kwargs)
-		print(self.data)
 		
-	def clean_slot(self):
-		print(self.cleaned_data.get('slot'))
-		return self.cleaned_data.get('slot')
-		
-	def clean_faculty(self):
-		print(self.cleaned_data.get('faculty'))
-		return self.cleaned_data.get('faculty')
-		
-	def save(self, course, commit=True):
-		self.instance.course = course
-		return super().save()
+		self.fields['slot'].label = 'Slot'
+		self.fields['slot'].widget.attrs.update({
+				'class': 'form-control',
+           })
+		self.fields['faculty'].queryset = Faculty.objects.all().order_by('name')
+		self.fields['faculty'].label = 'Faculty'
+		self.fields['faculty'].widget.attrs.update({
+				'class': 'form-control',
+			})
 
-
-class ElectiveSeatsCreationForm(forms.ModelForm):	
-	class Meta:
-		model = Elective_Seats
-		fields = ['dept','max_seats']
+class ElectiveSeatsCreationForm(forms.Form):
+	dept = forms.CharField(max_length=100)
+	max_seats = forms.IntegerField(min_value=0)
 		
+	def __init__(self, *args, **kwargs):
+		super(ElectiveSeatsCreationForm, self).__init__(*args, **kwargs)
+		self.fields['max_seats'].label = 'Maximum Seats'
+		self.fields['max_seats'].widget.attrs.update({
+				'class': 'form-control',
+           })
+		self.fields['dept'].widget = forms.TextInput()
+		self.fields['dept'].widget.attrs.update({
+				'class': 'form-control',
+				'readonly': True,
+           })
+		
+	def clean_dept(self):
+		dept = self.cleaned_data.get('dept')
+		if dept in Department.objects.all():
+			return dept
+		else:
+			raise ValidationError(_('Invalid department'), code='invalid')
+		return None		
+	
 	def save(self, elective, commit=True):
-		self.instance.elective = elective
-		return super().save()
-	
-#class AddElectiveForm(forms.Form):
-#	slots = forms.SelectMultiple(attrs={
-#				'class': 'form-control',
-#				'required': True,
-#			},choices=Elective.SLOT_CHOICES)
-#	max_seats = 
-	
-	
-#class ElectiveForm(MultiModelForm):
-#	form_classes = {
-#        'course': CourseCreationForm,
-#        'elective': ElectiveCreationForm,
-#        'elective_seat': ElectiveSeatForm,
-#    }
-#	
-#		objects = super(ElectiveForm, self).save(commit=False)
-#
-#		if commit:
-#			course = objects['course']
-#			user.save()
-#			for elective in objects['electives']:
-#				elective.course = course
-#				elective.save()
-#				for elective_seat in objects['elective_seats']:
-#					elective_seat.elective = elective
-#					elective_seat.max_seats = elective_seat.max_seats / objects['electives'].length()
-#					elective_seat.save()
-#		return objects
+		data = self.cleaned_data
+		elective_seat = Elective_Seats(elective=elective,dept=data.get('dept'),max_seats=data.get('max_seats'))		
+		if commit == True:
+			elective_seat.save()
+		return elective_seat
