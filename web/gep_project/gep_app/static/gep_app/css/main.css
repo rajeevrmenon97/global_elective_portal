@@ -44,6 +44,15 @@ html,body {
 	list-style-type: none;
 }
 
+.borderless td, .borderless th {
+    border: none;
+}
+
+.sub-list-group-item {
+    font-size: 14px;
+    margin: 8px 0;
+}
+
 .bg-image {
 	overflow: auto;
 	background-image: url(/static/gep_app/images/bg.jpg);
@@ -104,6 +113,14 @@ html,body {
 	height: 20px;
 	width: 20px;
 	margin-left: 5px;
+}
+
+.dashed-green-round-border {
+	color: white;
+	background-color: #5CB85C;
+	border: dashed 1px #5CB85C;
+	border-radius: 50%;
+	padding: 5px 0;
 }
 /*
 

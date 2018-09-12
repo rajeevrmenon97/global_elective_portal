@@ -12,7 +12,7 @@ class User(AbstractUser):
 	SAC = 'A'
 	ROLE_CHOICES = ((STUDENT,'Student'),(FACULTY,'Faculty'),(SAC,'Sac'),(DEPARTMENT,'Department'))
 
-	username = models.CharField(max_length=10,primary_key=True)
+	username = models.CharField(max_length=100,primary_key=True)
 	password = models.CharField(max_length=100,blank=True,null=True)
 	role = models.CharField(max_length=1,choices=ROLE_CHOICES)
 	email = models.EmailField(max_length=100)
@@ -34,14 +34,14 @@ class User(AbstractUser):
 		return '%s (%s)' % (getattr(self, self.USERNAME_FIELD), self.get_role_display())
 
 class Department(models.Model):
-	user = models.ForeignKey(get_user_model(),on_delete=models.CASCADE,primary_key=True)
+	user = models.OneToOneField(get_user_model(),on_delete=models.CASCADE,primary_key=True)
 	name = models.CharField(max_length=100,unique=True)
 
 	def __str__(self):
 		return '%s (%s)' % (self.name, self.user.username)
 
 class Faculty(models.Model):
-	user = models.ForeignKey(get_user_model(),on_delete=models.CASCADE,primary_key=True)
+	user = models.OneToOneField(get_user_model(),on_delete=models.CASCADE,primary_key=True)
 	name = models.CharField(max_length=100)
 	dept = models.ForeignKey(Department, on_delete=models.CASCADE)
 
@@ -66,11 +66,11 @@ class Student(models.Model):
 	SLOT_CHOICES = (('A','Slot A'),('B','Slot B'),('C','Slot C'),('D','Slot D'),('E','Slot E'),('F','Slot F'),('G','Slot G'),('H','Slot H'),('P','Slot P'),('Q','Slot Q'),('R','Slot R'),('S','Slot S'),('T','Slot T'),)
 	SEMESTER_CHOICES = ((1,'Semester I'),(2,'Semester II'),(3,'Semester III'),(4,'Semester IV'),(5,'Semester V'),(6,'Semester VI'),(7,'Semester VII'),(8,'Semester VIII'),(9,'Semester IX'),(10,'Semester X'),)
 
-	user = models.ForeignKey(get_user_model(),on_delete=models.CASCADE,primary_key=True)
+	user = models.OneToOneField(get_user_model(),on_delete=models.CASCADE,primary_key=True)
 	name = models.CharField(max_length=100)
 	date_of_birth = models.DateField()
-	FA = models.ForeignKey(Faculty,blank=True,null=True,on_delete=models.PROTECT)
 	dept = models.ForeignKey(Department, on_delete=models.CASCADE)
+	FA = models.ForeignKey(Faculty,blank=True,null=True,on_delete=models.PROTECT)
 	current_CGPA = models.DecimalField(blank=True,null=True,decimal_places=2,max_digits=4,validators=[MinValueValidator(0),MaxValueValidator(10)])
 	next_semester = models.IntegerField(blank=True,null=True,choices=SEMESTER_CHOICES)
 	core_slots = ArrayField(models.CharField(max_length=1,choices=SLOT_CHOICES),blank=True,null=True)
@@ -80,9 +80,6 @@ class Student(models.Model):
 
 	def __str__(self):
 		return '%s (%s)' % (self.name, self.user.username)
-
-	def has_submitted(self):
-		return self.submission_datetime is not None
 
 class Elective(models.Model):
 	SLOT_CHOICES = (('A','Slot A'),('B','Slot B'),('C','Slot C'),('D','Slot D'),('E','Slot E'),('F','Slot F'),('G','Slot G'),('H','Slot H'),('P','Slot P'),('Q','Slot Q'),('R','Slot R'),('S','Slot S'),('T','Slot T'),)

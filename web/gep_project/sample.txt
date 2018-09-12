@@ -198,13 +198,6 @@ s=Student.objects.create(user=u,name='Amruth',date_of_birth='1997-03-21',FA=f,de
 e=Elective.objects.get(course__name='French',slot='G')
 COT_Allotment.objects.create(student=s,elective=e)
 
-#########################
-#   Exclusive Courses   #
-#########################
-
-c=Course.objects.get(name='French')
-cc=Course.objects.get(name='German')
-Exclusive_Courses.objects.create(course_A=c,course_B=cc)
 
 
 from gep_app.models import *

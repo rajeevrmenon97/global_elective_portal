@@ -12,20 +12,28 @@
 	  <button class="navbar-toggler navbar-toggler-small" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
 		<span class="navbar-toggler-icon navbar-toggler-icon-small"></span>
 	  </button>
-
 	  <div class="collapse navbar-collapse" id="navbarSupportedContent">
 		<ul class="navbar-nav mr-auto">
-		  <li class="nav-item active">
-			<a class="nav-link" href="#">Home</a>
-		  </li>
 		  <li class="nav-item">
+			<a class="nav-link" href="#">View courses with COT</a>
+		  </li>
+		  <li class="nav-item active">
 			<a class="nav-link" href="#">Add Elective</a>
 		  </li>
 		  <li class="nav-item">
 			<a class="nav-link" href="#">Edit Elective</a>
 		  </li>
 		  <li class="nav-item">
-			<a class="nav-link" href="#">View Allotment</a>
+			<a class="nav-link" href="#">View and Download Allotment</a>
+		  </li>
+		  <li class="nav-item">
+			<a class="nav-link" href="#">View and Download FA data group by FA</a>
+		  </li>
+		  <li class="nav-item">
+			<a class="nav-link" href="#">Add COT Allotment</a>
+		  </li>
+		  <li class="nav-item">
+			<a class="nav-link" href="#">Renew Dept,Faculty,Student</a>
 		  </li>
 		</ul>
 	  </div>
@@ -75,58 +83,52 @@
 	</form>
 	{% endif %}
 	{% if is_course_submitted %}
-	<div id="course" class="h5 col-12 text-center text-success">{{course.course_id}}</div>
+	<div id="course_id" class="h5 col-12 text-center text-success">{{course.course_id}}</div>
+	<div id="elective-error" class="errorlist"></div>
 	<table class="table table-hover">
-		<thead>
-			<tr>
-				<th>Slot</th>
-				<th>Faculty</th>
-				<th>Seats Available</th>
-			</tr>			
-		</thead>
 		<tbody>
 			{% for elective in electives %}
 			<tr>
-				<td>{{ elective.get_slot_display }}</td>
-				<td>{{ elective.faculty|default_if_none:"Not Alloted" }}</td>
-				<td><table class="table">
-					<tbody>
-					{% for elective_seat in elective_seats %}
-					{% if elective_seat.elective == elective %}
-					<tr>
-					<td>{{ elective_seat.dept }}</td>	
-					<td>{{ elective_seat.max_seats }}</td>	
-						</tr>
-					{% endif %}
-					{% endfor %}
-					</tbody>
-					</table>
+				<td>
+					<label class="form-label">Slot</label>
+					<div id="slot">{{ elective.slot }}</div>
 				</td>
-				<td><input id="remove-elective" class="btn btn-danger" type="button" value="Remove"></td>
+				<td>
+					<label class="form-label">Faculty</label>
+					<div>{{ elective.faculty|default_if_none:"Not Alloted" }}</div>
+				</td>
+				{% for elective_seat in elective_seats %}
+				{% if elective_seat.elective == elective %}
+				<td>
+					<label class="form-label">{{ elective_seat.dept.name }}</label>	
+					<div>{{ elective_seat.max_seats }}</div>	
+				</td>
+				{% endif %}
+				{% endfor %}
+				<td><input class="remove-elective btn btn-danger" type="button" value="Remove"></td>
 			</tr>
 			{% endfor %}
 			<tr id="new-elective">
 				<form id="elective-form" action="{% url 'add_elective' %}" method="post">
 					{% csrf_token %}
-					<td>{{ elective_form.slot }}</td>
-					<td>{{ elective_form.faculty}}</td>
-					<td><table class="table">
-						<tbody>
-						{{ elective_seats_formset.management_form }}
-						{% for elective_seat_form in elective_seats_formset %}
-						<tr>
-						<td class="dept">{{elective_seat_form.dept}}</td>
-						<td>{{elective_seat_form.max_seats}}</td>
-						</tr>
-						{% endfor %}
-						</tbody>
-						</table>
+					<td>
+						<label class="form-label" for="id_{{elective_form.slot.name}}">{{elective_form.slot.label}}</label>
+						{{ elective_form.slot }}
 					</td>
+					<td>
+						<label class="form-label" for="id_{{elective_form.faculty.name}}">{{elective_form.faculty.label}}</label>
+						{{ elective_form.faculty}}
+					</td>
+					{{ elective_seats_formset.management_form }}
+					{% for elective_seat_form in elective_seats_formset %}
+					<td>
+						<label class="form-label">{{elective_seat_form.dept_name.value}}</label>
+						{{elective_seat_form.dept_name}}
+						{{elective_seat_form.max_seats}}
+					</td>
+					{% endfor %}
 					<td><input id="add-elective" class="btn btn-success pl-4 pr-4" type="button" value="Add"></td>
 				</form>
-				<script>$('.dept input').each(function(index) {
-							$(this).val({{depts.index}})
-						})</script>
 			</tr>
 		</tbody>
 	</table>
