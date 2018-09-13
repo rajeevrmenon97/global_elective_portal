@@ -1,0 +1,25 @@
+{% load static %}
+<!doctype html>
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+		<title>Global Elective Allotment</title>
+		<link rel="shortcut icon" type="image/png" href="{% static 'gep_app/images/fevicon.png' %}" />
+		<link rel="stylesheet" href="{% static 'gep_app/css/bootstrap.min.css' %}">
+		<link rel="stylesheet" href="{% static 'gep_app/css/main.css' %}">
+		<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+		{% block css_files %} {% endblock %}
+		<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+		<script src="{% static 'gep_app/js/bootstrap.min.js' %}"></script>
+		{% block js_files %} {% endblock %}
+	</head>
+	<body>
+		<nav class="navbar fixed-top navbar-light bg-success">
+			<a class="navbar-brand text-light" href="#">
+				<img src="{% static 'gep_app/images/nitc-logo.png' %}" width="45px" height="45px" alt="" class="d-inline-block align-top ml-md-2 mr-md-2">
+				<span class="h4 align-bottom">NITC Online Global Elective Allotment Portal</span>
+			</a>
+		</nav>
+        {% block main_content %}{% endblock %}		
+	</body>
+</html>

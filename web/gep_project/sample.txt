@@ -1,0 +1,211 @@
+from gep_app.models import *
+from gep_app import allotment
+from django.contrib.auth import get_user_model
+
+Student.objects.all().delete()
+Department.objects.all().delete()
+get_user_model().objects.all().delete()
+
+#####################
+#  Departments      #
+#####################
+
+u=get_user_model().objects.create(username='MH',email='mechanical@gmail.com',role='D')
+u.set_password('12345')
+u.save()
+d=Department.objects.create(name='Mechanical Engineering',user=u)
+
+
+u=get_user_model().objects.create(username='SM',email='management@gmail.com',role='D')
+u.set_password('12345')
+u.save()
+d=Department.objects.create(name='School of Management',user=u)
+
+
+u=get_user_model().objects.create(username='CS',email='computer@gmail.com',role='D')
+u.set_password('12345')
+u.save()
+d=Department.objects.create(name='Computer Engineering',user=u)
+
+
+u=get_user_model().objects.create(username='CV',email='civil@gmail.com',role='D')
+u.set_password('12345')
+u.save()
+d=Department.objects.create(name='Civil Engineering',user=u)
+
+
+#####################
+#  Faculty          #
+#####################
+
+u=get_user_model().objects.create(username='PNM',email='pournami@gmail.com',role='F')
+u.set_password('12345')
+u.save()
+f=Faculty.objects.create(name='Pournami N',dept=Department.objects.get(user='CS'),user=u)
+
+u=get_user_model().objects.create(username='MKR',email='murali@gmail.com',role='F')
+u.set_password('12345')
+u.save()
+f=Faculty.objects.create(name='Muralikrishnan',dept=Department.objects.get(user='CS'),user=u)
+
+u=get_user_model().objects.create(username='SM3003',email='preethi@gmail.com',role='F')
+u.set_password('12345')
+u.save()
+f=Faculty.objects.create(name='Preethi',dept=Department.objects.get(user='SM'),user=u)
+
+#####################
+#  Electives        #
+#####################
+
+c=Course.objects.create(name='Image Processing',course_id='CS4002',dept=Department.objects.get(user__username='CS'),credits=4,cot_requisite=False,mode_of_allotment='FCFS')
+f=Faculty.objects.get(name='Pournami N')
+e=Elective.objects.create(faculty=f,course=c,slot='E')
+
+c=Course.objects.create(name='Production, Planning', course_id='MH4002',dept=Department.objects.get(user__username='MH'),credits=3,cot_requisite=False,mode_of_allotment='CGPA')
+f=Faculty.objects.get(name='Pournami N')
+e=Elective.objects.create(faculty=f,course=c,slot='E')
+
+c=Course.objects.create(name='French',course_id='SM4005',dept=Department.objects.get(user='SM'),credits=3,cot_requisite=True,mode_of_allotment='FCFS')
+f=Faculty.objects.get(name='Preethi')
+e=Elective.objects.create(faculty=f,course=c,slot='F')
+e=Elective.objects.create(faculty=f,course=c,slot='G')
+
+c=Course.objects.create(name='German',course_id='SM4006',dept=Department.objects.get(user='SM'),credits=3,cot_requisite=False,mode_of_allotment='FCFS')
+f=Faculty.objects.get(name='Preethi')
+e=Elective.objects.create(faculty=f,course=c,slot='F')
+e=Elective.objects.create(faculty=f,course=c,slot='G')
+
+c=Course.objects.create(name='Structural Planning',course_id='CV0124',dept=Department.objects.get(user='CV'),credits=3,cot_requisite=False,mode_of_allotment='FCFS')
+f=Faculty.objects.get(name='Preethi')
+e=Elective.objects.create(faculty=f,course=c,slot='H')
+
+
+#####################
+#  Elective seats   #
+#####################
+
+e=Elective.objects.get(course__name='Image Processing')
+d=Department.objects.get(user__username='CS')
+Elective_Seats.objects.create(elective=e,dept=d,max_seats=0)
+d=Department.objects.get(user__username='MH')
+Elective_Seats.objects.create(elective=e,dept=d,max_seats=3)
+d=Department.objects.get(user__username='CV')
+Elective_Seats.objects.create(elective=e,dept=d,max_seats=2)
+d=Department.objects.get(user__username='SM')
+Elective_Seats.objects.create(elective=e,dept=d,max_seats=0)
+
+
+e=Elective.objects.get(course__name='Production, Planning')
+d=Department.objects.get(user__username='CS')
+Elective_Seats.objects.create(elective=e,dept=d,max_seats=2)
+d=Department.objects.get(user__username='MH')
+Elective_Seats.objects.create(elective=e,dept=d,max_seats=0)
+d=Department.objects.get(user__username='CV')
+Elective_Seats.objects.create(elective=e,dept=d,max_seats=2)
+d=Department.objects.get(user__username='SM')
+Elective_Seats.objects.create(elective=e,dept=d,max_seats=0)
+
+
+e=Elective.objects.get(course__name='French',slot='F')
+d=Department.objects.get(user__username='CS')
+Elective_Seats.objects.create(elective=e,dept=d,max_seats=3)
+d=Department.objects.get(user__username='MH')
+Elective_Seats.objects.create(elective=e,dept=d,max_seats=2)
+d=Department.objects.get(user__username='CV')
+Elective_Seats.objects.create(elective=e,dept=d,max_seats=3)
+d=Department.objects.get(user__username='SM')
+Elective_Seats.objects.create(elective=e,dept=d,max_seats=0)
+
+
+e=Elective.objects.get(course__name='French',slot='G')
+d=Department.objects.get(user__username='CS')
+Elective_Seats.objects.create(elective=e,dept=d,max_seats=3)
+d=Department.objects.get(user__username='MH')
+Elective_Seats.objects.create(elective=e,dept=d,max_seats=2)
+d=Department.objects.get(user__username='CV')
+Elective_Seats.objects.create(elective=e,dept=d,max_seats=3)
+d=Department.objects.get(user__username='SM')
+Elective_Seats.objects.create(elective=e,dept=d,max_seats=0)
+
+
+e=Elective.objects.get(course__name='German',slot='F')
+d=Department.objects.get(user__username='CS')
+Elective_Seats.objects.create(elective=e,dept=d,max_seats=3)
+d=Department.objects.get(user__username='MH')
+Elective_Seats.objects.create(elective=e,dept=d,max_seats=2)
+d=Department.objects.get(user__username='CV')
+Elective_Seats.objects.create(elective=e,dept=d,max_seats=3)
+d=Department.objects.get(user__username='SM')
+Elective_Seats.objects.create(elective=e,dept=d,max_seats=0)
+
+
+e=Elective.objects.get(course__name='German',slot='G')
+d=Department.objects.get(user__username='CS')
+Elective_Seats.objects.create(elective=e,dept=d,max_seats=3)
+d=Department.objects.get(user__username='MH')
+Elective_Seats.objects.create(elective=e,dept=d,max_seats=2)
+d=Department.objects.get(user__username='CV')
+Elective_Seats.objects.create(elective=e,dept=d,max_seats=3)
+d=Department.objects.get(user__username='SM')
+Elective_Seats.objects.create(elective=e,dept=d,max_seats=0)
+
+
+e=Elective.objects.get(course__name='Structural Planning')
+d=Department.objects.get(user__username='CS')
+Elective_Seats.objects.create(elective=e,dept=d,max_seats=3)
+d=Department.objects.get(user__username='MH')
+Elective_Seats.objects.create(elective=e,dept=d,max_seats=3)
+d=Department.objects.get(user__username='CV')
+Elective_Seats.objects.create(elective=e,dept=d,max_seats=0)
+d=Department.objects.get(user__username='SM')
+Elective_Seats.objects.create(elective=e,dept=d,max_seats=0)
+
+
+#####################
+#  Students         #
+#####################
+
+u=get_user_model().objects.create(username='B150587CS',email='aysha@gmail.com',role='S')
+u.set_password('12345')
+u.save()
+f=Faculty.objects.get(name='Muralikrishnan')
+d=Department.objects.get(user__username='CS')
+s=Student.objects.create(user=u,name='Aysha',date_of_birth='1996-03-21',FA=f,dept=d,current_CGPA=6.61,next_semester=7,core_slots=['A','B','C','E'],required_elective_count=2,submission_datetime='2018-08-31 23:59:00')
+
+u=get_user_model().objects.create(username='B150243CS',email='devika@gmail.com',role='S')
+u.set_password('12345')
+u.save()
+f=Faculty.objects.get(name='Muralikrishnan')
+d=Department.objects.get(user__username='MH')
+s=Student.objects.create(user=u,name='Devika',date_of_birth='1996-03-21',FA=f,dept=d,current_CGPA=6.61,next_semester=7,core_slots=['A','B','C','G'],required_elective_count=2,submission_datetime='2018-08-31 23:58:00')
+
+u=get_user_model().objects.create(username='B150592CS',email='ameer@gmail.com',role='S')
+u.set_password('12345')
+u.save()
+f=Faculty.objects.get(name='Muralikrishnan')
+d=Department.objects.get(user__username='CS')
+s=Student.objects.create(user=u,name='Ameer',date_of_birth='1996-03-21',FA=f,dept=d,current_CGPA=6.61,next_semester=7,core_slots=['A','B','C','E'],required_elective_count=2,submission_datetime='2018-08-31 23:59:00')
+e=Elective.objects.get(course__name='French',slot='F')
+COT_Allotment.objects.create(student=s,elective=e)
+
+u=get_user_model().objects.create(username='B150202CS',email='amruth@gmail.com',role='S')
+u=get_user_model().objects.get(username='B150202CS',email='amruth@gmail.com')
+u.set_password('12345')
+u.save()
+f=Faculty.objects.get(name='Muralikrishnan')
+d=Department.objects.get(user__username='CS')
+s=Student.objects.create(user=u,name='Amruth',date_of_birth='1997-03-21',FA=f,dept=d,current_CGPA=7.8,next_semester=7,core_slots=['A','B','C','F'],required_elective_count=2,submission_datetime='2018-08-31 23:52:00')
+e=Elective.objects.get(course__name='French',slot='G')
+COT_Allotment.objects.create(student=s,elective=e)
+
+
+
+from gep_app.models import *
+from gep_app import allotment
+from django.contrib.auth import get_user_model
+#Elective_Preference.objects.all()
+Elective_Allotment.objects.all().delete()
+allotment.do_allotment()
+for i in Elective_Allotment.objects.all():
+	print(i)
+	
