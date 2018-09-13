@@ -10,6 +10,7 @@ from datetime import datetime
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.core import exceptions
+import os
 					##########################################
 					#       User Passes Test Functions       #
 					##########################################
@@ -41,6 +42,27 @@ def preference_submission_check(user):
 	"""Check if student user has submitted academics details"""
 	student = Student.objects.get(user=user)
 	if student.submission_datetime is not None:
+		return True
+	return False
+
+def academic_data_submission_datetime_check():
+	start_date = os.getenv('ACADEMIC_DATA_SUBMISSION_START_DATE')
+	end_date = os.getenv('ACADEMIC_DATA_SUBMISSION_END_DATE')
+	if start_date < datetime.now() < end_date:
+		return True
+	return False
+
+def preference_submission_datetime_check():
+	start_date = os.getenv('PREFERENCE_SUBMISSION_START_DATE')
+	end_date = os.getenv('PREFERENCE_SUBMISSION_END_DATE')
+	if start_date < datetime.now() < end_date:
+		return True
+	return False
+
+def allotment_publication_datetime_check():
+	start_date = os.getenv('ALLOTMENT_PUBLICATION_START_DATE')
+	end_date = os.getenv('ALLOTMENT_PUBLICATION_END_DATE')
+	if start_date < datetime.now() < end_date:
 		return True
 	return False
 
@@ -123,11 +145,26 @@ def get_preference_list(student):
 	return [elective for elective in electives if elective not in recently_removed_electives]
 
 ##########################################
-#    Academic Details Submission Stage   #
+#             Student Home               #
 ##########################################
 @login_required
 @user_passes_test(student_check)
 def student_home(request):
+	if academic_data_submission_datetime_check():
+		redirect('student_academic_data_submission')
+	elif academic_data_submission_datetime_check():
+		redirect('student_preference_submission')
+	elif academic_data_submission_datetime_check():
+		redirect('student_allotment_publication')
+	else:
+		raise Http404
+
+##########################################
+#    Academic Details Submission Stage   #
+##########################################
+@login_required
+@user_passes_test(student_check)
+def student_academic_data_submission(request):
 	"""Submits the details for FA verification"""
 	user = request.user
 	student = Student.objects.get(user=user)
@@ -203,7 +240,7 @@ def student_preference_submission(request):
 @user_passes_test(student_check)
 @user_passes_test(academic_details_check, login_url='student_test_failure')
 @user_passes_test(preference_submission_check, login_url='student_test_failure')
-def student_allotment(request):
+def student_allotment_publication(request):
 	"""Displays the elective alloted to the student"""
 	user = request.user
 	student = Student.objects.get(user=user)
