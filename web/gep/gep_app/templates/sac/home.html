@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% load static %}
+{% block main_content %}
+<div class="container-fluid">
+	<!--	NAVIGATION BAR    -->
+	<div class="row">
+	<nav class="col-9 navbar navbar-expand-sm navbar-light mb-3 style="background-color: transparent;"">
+	  <button class="navbar-toggler navbar-toggler-small" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+		<span class="navbar-toggler-icon navbar-toggler-icon-small"></span>
+	  </button>
+	  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+		<ul class="navbar-nav mr-auto">
+		  <li class="nav-item active">
+			<a class="nav-link" href="#">Startup</a>
+		  </li>
+		  <li class="nav-item">
+			<a class="nav-link" href="{% url 'sac_elective' %}">Electives</a>
+		  </li>
+		  <li class="nav-item">
+			<a class="nav-link" href="#">Academic data (dept|FA)</a>
+		  </li>
+		  <li class="nav-item">
+			<a class="nav-link" href="#">COT Allotment</a>
+		  </li>
+		  <li class="nav-item">
+			<a class="nav-link" href="#">Elective Allotment</a>
+		  </li>
+		</ul>
+	  </div>
+	</nav>
+    <a class="col-3 text-right btn btn-link text-success" href="{% url 'logout' %}">Logout</a>
+	</div>
+	
+	<!--    MAIN CONTENT	-->
+	<div class="h2 text-center text-success font-weight-bold">Global Elective Allotment Startup</div>
+	<div class="h6 font-weight-bold mt-3">Follow these steps in the given order to start the Global Elective Allotment process. </div>
+	<!--	Display error messages (if any)	-->
+	{% if messages %}
+	<ul class="messages">
+		{% for message in messages %}
+			{% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+			<li {% if message.tags %} class="{{ message.tags }} errorlist"{% endif %}>{{ message }}</li>
+			{% endif %}
+		{% endfor %}
+	</ul>
+	{% endif %}
+	<ul class="list-group">
+		<!--	Upload Department data file	-->
+		<li class="list-group-item">
+			<div>1) Upload Department Data File as csv in the following format. Password of each department will be 'DEPARTMENT'.</div>
+			<img class="mt-2" src="{% static 'gep_app/images/department.png' %}">
+			<form action="{% url 'startup_dept' %}" method="post" enctype="multipart/form-data">
+				{% csrf_token %}
+				<input required type="file" id="departments_file" name="departments_file">
+				<input class="btn btn-success mt-4" type="submit" value="Upload">
+			</form>
+		</li>
+		<!--	Upload Student data file	-->
+		<li class="list-group-item">
+			<div>2) Upload Student Data File as csv in the following format. Username and password of each student will be their roll number in block letters.</div>
+			<img class="mt-2" src="{% static 'gep_app/images/student.png' %}">
+			<form action="{% url 'startup_student' %}" method="post" enctype="multipart/form-data">
+				{% csrf_token %}
+				<input required type="file" id="students_file" name="students_file">
+				<input class="btn btn-success mt-4" type="submit" value="Upload">
+			</form>
+		</li>
+		<!--	Upload Faculty data file	-->
+		<li class="list-group-item">
+			<div>3) Upload Faculty Data File as csv in the following format. Username of the faculty will be same as their email and password will be 'FACULTY'.</div>
+			<img class="mt-2" src="{% static 'gep_app/images/faculty.png' %}">
+			<form action="{% url 'startup_faculty' %}" method="post" enctype="multipart/form-data">
+				{% csrf_token %}
+				<input required type="file" id="faculties_file" name="faculties_file">
+				<input class="btn btn-success mt-4" type="submit" value="Upload">
+			</form>
+		</li>
+		<!--	To update Access Dates and Email Credentials -->
+		<li class="list-group-item">
+			<div>4) Go to root folder of the tathva server. Open 'global.com' folder. Go to /web/gep/gep_project folder and change the settings file. Update the following values. Though it is possible to change these values in between the allotment process, it is not advised to do so.</div>
+			<ul>
+				<li class="sub-list-group-item"><b>ACADEMIC_DATA_SUBMISSION_START_DATE: </b>It is the date and time to provide access to students to submit academic details. Format: 'yyyy-mm-ddThh:mm:ss' like '2018-04-07T00:00:00'.</li>
+				<li class="sub-list-group-item"><b>ACADEMIC_DATA_SUBMISSION_END_DATE: </b>It is the date and time to close the access of students to submit academic details. Format: 'yyyy-mm-ddThh:mm:ss' like '2018-04-07T00:00:00'.</li>
+				<li class="sub-list-group-item"><b>PREFERENCE_SUBMISSION_START_DATE: </b>It is the date and time to provide access to students to submit the elective preference list. Format: 'yyyy-mm-ddThh:mm:ss' like '2018-04-07T00:00:00'.</li>
+				<li class="sub-list-group-item"><b>PREFERENCE_SUBMISSION_END_DATE: </b>It is the date and time to close the access of students to submit the elective preference list. Format: 'yyyy-mm-ddThh:mm:ss' like '2018-04-07T00:00:00'.</li>
+				<li class="sub-list-group-item"><b>ALLOTMENT_PUBLICATION_START_DATE: </b>It is the date and time to publish the elective preference list to students. Format: 'yyyy-mm-ddThh:mm:ss' like '2018-04-07T00:00:00'.</li>
+				<li class="sub-list-group-item"><b>ALLOTMENT_PUBLICATION_END_DATE: </b>It is the date and time to close the student portal. Format: 'yyyy-mm-ddThh:mm:ss' like '2018-04-07T00:00:00'.</li>
+				<li class="sub-list-group-item"><b>EMAIL_HOST_USER: </b>It is the email from which all mails related to allotment is sent.</li>
+				<li class="sub-list-group-item"><b>EMAIL_HOST_PASSWORD: </b>It is the password of the above mentioned email.</li>
+			</ul>
+		</li> 
+	</ul>
+</div>
+{% endblock %}

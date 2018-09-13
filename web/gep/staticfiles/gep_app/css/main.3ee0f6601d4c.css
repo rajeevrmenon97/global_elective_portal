@@ -1,0 +1,141 @@
+* {
+	font-family: 'Roboto', sans-serif;
+}
+
+.elective-group {
+	border: solid 1px lightgrey;
+	border-radius: .25rem;	
+	padding: 5px;
+}
+
+html,body {
+	height: 100%;
+}
+
+.container-fluid {
+	height: calc(100% - 71px);
+	margin-top: 71px;
+}
+
+.form-label {
+	font-size: 14px;
+	font-weight: bold;
+}
+
+.form-control:focus {
+	border-color: transparent;
+	box-shadow: 0px 0px 5px #5CB85C;
+}
+
+::-moz-selection { /* Code for Firefox */
+    color: white;
+    background: #5CB85C;
+}
+
+::selection {
+    color: white; 
+    background: #5CB85C;
+}
+
+.errorlist {
+	font-size: 11px;
+	color: red;
+	text-align: right;
+	list-style-type: none;
+}
+
+.borderless td, .borderless th {
+    border: none;
+}
+
+.sub-list-group-item {
+    font-size: 14px;
+    margin: 8px 0;
+}
+
+.bg-image {
+	overflow: auto;
+	background-image: url("/static/gep_app/images/bg.031e6f54deb2.jpg");
+	background-size: cover;
+    background-repeat:no-repeat;
+}
+
+.form-container {
+	margin-top: 18vh;
+    padding: 30px;
+	background-color: black;
+	opacity: .75;
+	border-radius: .25rem;
+}
+
+.form-control-disabled {
+	background-color: #eee;
+}
+
+.form-control-transparent {
+	background-color: transparent !important;
+}
+
+.form-control-transparent:focus {
+	border-color: transparent;
+	box-shadow: 0px 0px 5px white;
+}
+
+.form-check-input {
+	position: relative;
+	margin-left: -.25rem;
+}
+
+.navbar-toggler.navbar-toggler-small {
+	padding: 0 5px;
+}
+
+.navbar-toggler-icon.navbar-toggler-icon-small {
+    width: 20px;
+    height: 27px;
+}
+
+.border-grey {
+	border: 1px solid #d3d9df;
+}
+
+.btn-small {
+	font-size: 12px;
+	padding: 0 6px;
+}
+
+.form-label-title {
+	text-transform: uppercase;
+	margin-bottom: 5px;
+}
+
+.checkbox-big {
+	height: 20px;
+	width: 20px;
+	margin-left: 5px;
+}
+
+.dashed-green-round-border {
+	color: white;
+	background-color: #5CB85C;
+	border: dashed 1px #5CB85C;
+	border-radius: 50%;
+	padding: 5px 0;
+}
+/*
+
+#new-elective {
+	display: none;
+}
+*/
+
+@media screen and (max-width: 400px){
+	#login-container .form-container,#change-password-container .form-container {
+		margin-top: 0;
+		height: 100%;
+	}
+	
+	.bg-image {
+		background-image: url("/static/gep_app/images/bg-mini.44ea19cda256.jpg");
+	}
+}

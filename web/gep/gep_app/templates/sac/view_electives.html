@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block main_content %}
+<div class="container-fluid">
+	<div class="row">
+	<nav class="col-9 navbar navbar-expand-sm navbar-light mb-3 style="background-color: transparent;"">
+	  <button class="navbar-toggler navbar-toggler-small" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+		<span class="navbar-toggler-icon navbar-toggler-icon-small"></span>
+	  </button>
+	  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+		<ul class="navbar-nav mr-auto">
+		  <li class="nav-item">
+			<a class="nav-link" href="#">View courses with COT</a>
+		  </li>
+		  <li class="nav-item active">
+			<a class="nav-link" href="#">Add Elective</a>
+		  </li>
+		  <li class="nav-item">
+			<a class="nav-link" href="#">Edit Elective</a>
+		  </li>
+		  <li class="nav-item">
+			<a class="nav-link" href="#">View and Download Allotment</a>
+		  </li>
+		  <li class="nav-item">
+			<a class="nav-link" href="#">View and Download FA data group by FA</a>
+		  </li>
+		  <li class="nav-item">
+			<a class="nav-link" href="#">Add COT Allotment</a>
+		  </li>
+		  <li class="nav-item">
+			<a class="nav-link" href="#">Renew Dept,Faculty,Student</a>
+		  </li>
+		</ul>
+	  </div>
+	</nav>
+    <a class="col-3 text-right btn btn-link text-success" href="{% url 'logout' %}">Logout</a>
+	</div>
+	
+	<form id="course-form" action="{% url 'sac_home' %}" method="post">
+		{% csrf_token %}
+		{{ course_form.course_id}}{{course_form.course_id.errors}}
+		<input id="course-submit" class="btn btn-success pl-4 pr-4" type="submit" value="Add new elective"/>
+	</form>
+	<table class="table table-hover">
+		<thead>
+			<th scope="col">Department</th>
+			<th scope="col">Course ID</th>
+			<th scope="col">Name</th>
+			<th scope="col">Credit</th>
+			<th scope="col">Pre-requisite</th>
+			<th scope="col">COT</th>
+			<th scope="col">CGPA cutoff</th>
+			<th scope="col">Mode of allotment</th>
+		</thead>
+		<tbody>
+			{% for course in courses %}
+			<tr>
+				<td>
+					<label class="form-label">Slot</label>
+					<div id="slot">{{ elective.slot }}</div>
+				</td>
+				<td>
+					<label class="form-label">Faculty</label>
+					<div>{{ elective.faculty|default_if_none:"Not Alloted" }}</div>
+				</td>
+				{% for elective_seat in elective_seats %}
+				{% if elective_seat.elective == elective %}
+				<td>
+					<label class="form-label">{{ elective_seat.dept.name }}</label>	
+					<div>{{ elective_seat.max_seats }}</div>	
+				</td>
+				{% endif %}
+				{% endfor %}
+				<td><input class="remove-elective btn btn-danger" type="button" value="Remove"></td>
+			</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+</div>
+{% endblock %}
