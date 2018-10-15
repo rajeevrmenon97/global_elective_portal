@@ -48,7 +48,7 @@ class Course(models.Model):
 	cot_requisite = models.BooleanField(default=False)
 	cgpa_cutoff = models.DecimalField(default=0,decimal_places=2,max_digits=4,validators=[MinValueValidator(0),MaxValueValidator(10)])
 	mode_of_allotment = models.CharField(max_length=4,choices=MODE_OF_ALLOTMENT_CHOICES)
-	allowed_semesters = ArrayField(models.IntegerField(choices=SEMESTER_CHOICES))
+	allowed_semesters = ArrayField(models.IntegerField(choices=SEMESTER_CHOICES),default=[],blank=True)
 
 	def __str__(self):
 		return '%s (%s)' % (self.name, self.course_id)

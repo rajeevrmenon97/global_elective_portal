@@ -2,6 +2,15 @@ from gep_app.models import *
 from gep_app import allotment
 from django.contrib.auth import get_user_model
 from django.db.models import Q
+from gep_app.forms import *
+
+c=Course.objects.filter(course_id='AR 3002')[0]
+f=CourseForm(instance=c)
+
+s=Student.objects.filter(user__username='B150243CS')[0]
+f=StudentAcademicsDataForm(instance=s)
+print(f.instance.core_slots)
+
 
 allotment.start_global_elective_allotment()
 Elective_Allotment.objects.all()

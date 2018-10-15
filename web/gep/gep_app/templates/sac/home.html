@@ -1,7 +1,19 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block js_files %}
+<script src="{% static 'gep_app/js/get_csrf_cookie.js' %}"></script>
+<script src="{% static 'gep_app/js/sac_file_uploads.js' %}"></script>
+<script src="{% static 'gep_app/js/sac_start_allotment.js' %}"></script>
+{% endblock %}
+
 {% block main_content %}
+<!--	Loader	-->
+<div class="loader">
+	<div class="loading-spinner"></div>
+	<div class="text-success">Processing...</div>
+</div>
+
 <div class="container-fluid">	
 	<!--	NAVIGATION BAR    -->
 	<nav class="navbar navbar-expand-sm navbar-light mb-3 no-padding-left no-padding-right">
@@ -28,16 +40,7 @@
 	<!--    MAIN CONTENT	-->
 	<div class="h2 text-center text-success font-weight-bold">Global Elective Allotment Procedure</div>
 	<div class="h6 font-weight-bold mt-3">Follow these steps in the given order to start the Global Elective Allotment process. </div>
-	<!--	Display error messages (if any)	-->
-	{% if messages %}
-	<ul class="messages">
-		{% for message in messages %}
-			{% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
-			<li {% if message.tags %} class="{{ message.tags }} errorlist"{% endif %}>{{ message }}</li>
-			{% endif %}
-		{% endfor %}
-	</ul>
-	{% endif %}
+	
 	<ul class="list-group">
 		<!--	To update Access Dates and Email Credentials -->
 		<li class="list-group-item">
@@ -59,30 +62,30 @@
 		<li class="list-group-item">
 			<div>2) Upload Department data file as csv in the following format. Password of each department will be 'DEPARTMENT'. This must be done before academic data submission stage.</div>
 			<img class="mt-2" src="{% static 'gep_app/images/department.png' %}">
-			<form action="{% url 'sac_dept' %}" method="post" enctype="multipart/form-data">
-				{% csrf_token %}
-				<input required type="file" id="department_file" name="department_file">
-				<input class="btn btn-success mt-4" type="submit" value="Upload Department File">
+			<form class="file-upload-form" action="{% url 'sac_upload_department_data' %}" method="post" enctype="multipart/form-data">
+				<div class="errorlist mt-1 file-upload-error"></div>
+				<input class="mt-3" required type="file" id="department_file" name="department_file">
+				<input class="btn btn-success mt-2 display-block file-upload-btn" type="button" value="Upload Department File">
 			</form>
 		</li>
 		<!--	Upload Faculty data file	-->
 		<li class="list-group-item">
 			<div>3) Upload Faculty data file as csv in the following format. Username of the faculty will be same as their email and password will be 'FACULTY'. This must be done before academic data submission stage.</div>
 			<img class="mt-2" src="{% static 'gep_app/images/faculty.png' %}">
-			<form action="{% url 'sac_faculty' %}" method="post" enctype="multipart/form-data">
-				{% csrf_token %}
-				<input required type="file" id="faculty_file" name="faculty_file">
-				<input class="btn btn-success mt-4" type="submit" value="Upload Faculty File">
+			<form class="file-upload-form" action="{% url 'sac_upload_faculty_data' %}" method="post" enctype="multipart/form-data">
+				<div class="errorlist mt-1 file-upload-error"></div>
+				<input class="mt-3" required type="file" id="faculty_file" name="faculty_file">
+				<input class="btn btn-success mt-2 display-block file-upload-btn" type="button" value="Upload Faculty File">
 			</form>
 		</li>
 		<!--	Upload Student data file	-->
 		<li class="list-group-item">
 			<div>4) Upload Student data file as csv in the following format. Username and password of each student will be their roll number in block letters. This must be done before academic data submission stage.</div>
 			<img class="mt-2" src="{% static 'gep_app/images/student.png' %}">
-			<form action="{% url 'sac_student' %}" method="post" enctype="multipart/form-data">
-				{% csrf_token %}
-				<input required type="file" id="student_file" name="student_file">
-				<input class="btn btn-success mt-4" type="submit" value="Upload Student File">
+			<form class="file-upload-form" action="{% url 'sac_upload_student_data' %}" method="post" enctype="multipart/form-data">
+				<div class="errorlist mt-1 file-upload-error"></div>
+				<input class="mt-3" required type="file" id="student_file" name="student_file">
+				<input class="btn btn-success mt-2 display-block file-upload-btn" type="button" value="Upload Student File">
 			</form>
 		</li>
 		<!--	Upload Elective file	-->
@@ -99,10 +102,10 @@
 				</ul>
 			</div>
 			<img class="mt-2" src="{% static 'gep_app/images/elective.png' %}">
-			<form action="{% url 'sac_elective' %}" method="post" enctype="multipart/form-data">
-				{% csrf_token %}
-				<input required type="file" id="elective_file" name="elective_file">
-				<input class="btn btn-success mt-4" type="submit" value="Upload Elective File">
+			<form class="file-upload-form" action="{% url 'sac_upload_elective_data' %}" method="post" enctype="multipart/form-data">
+				<div class="errorlist mt-1 file-upload-error"></div>
+				<input class="mt-3" required type="file" id="elective_file" name="elective_file">
+				<input class="btn btn-success mt-2 display-block file-upload-btn" type="button" value="Upload Elective File">
 			</form>
 		</li>
 		<!--	Manage Electives  -->
@@ -112,38 +115,41 @@
 		</li>
 		<!--	Upload Mutually Exclusive Course Group data file	-->
 		<li class="list-group-item">
-			<div>7) Upload Mutually Exclusive Course Group data file as csv in the following format. Data updation must be done before starting global allotment.</div>
+			<div>7) Upload Mutually Exclusive Course Group data file as csv in the following format. Data updation must be done before elective preference submission stage.</div>
 			<img class="mt-2" src="{% static 'gep_app/images/mutually_exclusive_course_group.png' %}">
-			<form action="{% url 'sac_mutually_exclusive_course_group' %}" method="post" enctype="multipart/form-data">
-				{% csrf_token %}
-				<input required type="file" id="mutually_exclusive_course_group_file" name="mutually_exclusive_course_group_file">
-				<input class="btn btn-success mt-4" type="submit" value="Upload Mutually Exclusive Course Group File">
+			<form class="file-upload-form" action="{% url 'sac_upload_mutually_exclusive_course_group_data' %}" method="post" enctype="multipart/form-data">
+				<div class="errorlist mt-1 file-upload-error"></div>
+				<input class="mt-3" required type="file" id="mutually_exclusive_course_group_file" name="mutually_exclusive_course_group_file">
+				<input class="btn btn-success mt-2 display-block file-upload-btn" type="button" value="Upload Mutually Exclusive Course File">
 			</form>
 		</li>
 		<!--	Upload COT Allotment data file	-->
 		<li class="list-group-item">
 			<div>8) Upload COT Allotment data file as csv in the following format. Data for all electives in all department should be uploaded together. Data updation must be done before elective preference submission stage.</div>
 			<img class="mt-2" src="{% static 'gep_app/images/cot_allotment.png' %}">
-			<form action="{% url 'sac_cot_allotment' %}" method="post" enctype="multipart/form-data">
-				{% csrf_token %}
-				<input required type="file" id="cot_allotment_file" name="cot_allotment_file">
-				<input class="btn btn-success mt-4" type="submit" value="Upload COT File">
+			<form class="file-upload-form" action="{% url 'sac_upload_cot_allotment_data' %}" method="post" enctype="multipart/form-data">
+				<div class="errorlist mt-1 file-upload-error"></div>
+				<input class="mt-3" required type="file" id="cot_allotment_file" name="cot_allotment_file">
+				<input class="btn btn-success mt-2 display-block file-upload-btn" type="button" value="Upload COT File">
 			</form>
 		</li>
 		<!--	Download Academic data	-->
 		<li class="list-group-item">
 			<div>9) Download the academic data submitted by the students from the following link after academic data submission stage.</div>
-			<a class="btn btn-success mt-2" href="{% url 'sac_academic_data' %}">Download Academic Data</a>
+			<a class="btn btn-success mt-2" href="{% url 'sac_download_academic_data' %}">Download Academic Data</a>
 		</li>
 		<!--	Start Global Elective Allotment	-->
 		<li class="list-group-item">
 			<div>10) Click on the following link to start alloting global electives to registered students.</div>
-			<a class="btn btn-success mt-2" href="{% url 'sac_start_allotment' %}">Start Global Elective Allotment</a>
+			<form class="start-allotment-form" action="{% url 'sac_start_allotment' %}" method="post">
+				<div class="errorlist mt-1 start-allotment-form-error"></div>
+				<input class="start-allotment-btn btn btn-success mt-2 display-block" type="button" value="Start Global Elective Allotment">
+			</form>
 		</li>
 		<!--	Download Allotment data	-->
 		<li class="list-group-item">
 			<div>11) Download the allotment data from the following link.</div>
-			<a class="btn btn-success mt-2" href="{% url 'sac_allotment_data' %}">Download Allotment Data</a>
+			<a class="btn btn-success mt-2" href="{% url 'sac_download_allotment_data' %}">Download Allotment Data</a>
 		</li>
 	</ul>
 </div>

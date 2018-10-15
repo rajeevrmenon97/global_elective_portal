@@ -117,17 +117,12 @@ class Tentative_Allotment:
 		exclusive_courses = get_mutually_exclusive_course_list(course)
 		alloted_electives = self.get_alloted_elective_set(student)
 		for elective in alloted_electives:
-			if elective.course in exclusive_courses:
+			if elective.course in exclusive_courses or elective.course == course:
 				return elective
 		return None
 
 	def check_exclusive_course_or_course_alloted(self,student,course):
-		exclusive_courses = get_mutually_exclusive_course_list(course)
-		alloted_courses = self.get_alloted_course_set(student)
-		for alloted_course in alloted_courses:
-			if alloted_course in exclusive_courses or alloted_course == course:
-				return True
-		return False
+		return self.get_alloted_exclusive_elective_of_course(student,course) is not None
 
 	def get_lowest_preferred_alloted_elective(self,student):
 		lowest_preferred_alloted_elective = None
@@ -170,7 +165,7 @@ def start_global_elective_allotment():
 
 					if tentative_allotment.check_exclusive_course_or_course_alloted(student,preferred_elective.course) and not tentative_allotment.check_slot_alloted(student,preferred_elective.slot):
 						alloted_exclusive_elective = tentative_allotment.get_alloted_exclusive_elective_of_course(student,preferred_elective.course)
-
+						
 						if has_higher_priority(student,preferred_elective,alloted_exclusive_elective):
 							tentative_allotment.remove_allotment(student,alloted_exclusive_elective)
 							tentative_allotment.add_allotment(student,preferred_elective)

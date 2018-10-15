@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext as _
 from django.db.models import Q
 from django.contrib.auth import get_user_model
-from .models import Student, Faculty, Department, Course, Elective, Elective_Seats, Mutually_Exclusive_Course_Group, Elective_Preference
+from .models import Student, Faculty, Department, Course, Elective, Elective_Seats, Mutually_Exclusive_Course_Group, Elective_Preference, COT_Allotment
 
 class UserForm(forms.ModelForm):
 	class Meta:
@@ -45,34 +45,42 @@ class StudentAcademicsDataForm(forms.ModelForm):
 	def __init__(self, *args, **kwargs):
 		super(StudentAcademicsDataForm, self).__init__(*args, **kwargs)
 		
+		self.fields['faculty_advisor'].label = 'Faculty Advisor'
 		self.fields['faculty_advisor'].queryset = Faculty.objects.filter(dept=self.instance.dept).order_by('name')
 		self.fields['faculty_advisor'].widget.attrs.update({
-				'class': 'form-control',
+				'placeholder': 'Choose Faculty Advisor',
+				'class': 'single-select-input',
 			})
 		
+		self.fields['current_cgpa'].label = 'CGPA upto previous semester'
 		self.fields['current_cgpa'].widget.attrs.update({
 				'placeholder': 'CGPA',
 				'class': 'form-control',
 			})
 		
+		self.fields['next_semester'].label = 'Registering semester'
 		self.fields['next_semester'].widget.attrs.update({
-				'placeholder': 'Semester',
-				'class': 'form-control',
+				'placeholder': 'Choose Semester',
+				'class': 'single-select-input',
 			})
 		
+		self.fields['required_elective_count'].label = 'Number of global electives to be taken in coming semester (Including overloading)'
 		self.fields['required_elective_count'].widget.attrs.update({
 				'placeholder': 'Number of global electives to be taken',
 				'class': 'form-control',
 			})
 		
+		self.fields['past_courses'].label = 'Electives that are taken before'
 		self.fields['past_courses'].queryset = Course.objects.filter(~Q(dept=self.instance.dept)).order_by('name')
 		self.fields['past_courses'].widget.attrs.update({
-				'placeholder': 'No courses choosen',
-				'class': 'form-control',
+				'placeholder': 'Choose past courses',
+				'class': 'multi-select-input',
 			})
 		
+		self.fields['core_slots'].label = 'Slots of core courses to be taken in coming semester (Including overloading)'
 		self.fields['core_slots'].widget = forms.SelectMultiple(attrs={
-				'class': 'form-control',
+				'placeholder': 'Choose slots',
+				'class': 'multi-select-input',
 			},choices=self.Meta.model.SLOT_CHOICES)
  
 	def clean_faculty_advisor(self):
@@ -119,9 +127,11 @@ class CourseForm(forms.ModelForm):
 				'class': 'form-control',
 			})
 		
+		self.fields['dept'].queryset = Department.objects.all().order_by('name')
 		self.fields['dept'].label = 'Department'
 		self.fields['dept'].widget.attrs.update({
-				'class': 'form-control',
+				'placeholder': 'Choose Department',
+				'class': 'single-select-input',
 			})
 		
 		self.fields['credits'].label = 'Number of credits'
@@ -150,12 +160,14 @@ class CourseForm(forms.ModelForm):
 		
 		self.fields['mode_of_allotment'].label = 'Mode of allotment'
 		self.fields['mode_of_allotment'].widget.attrs.update({
-				'class': 'form-control',
+				'placeholder': 'Mode of Allotment',
+				'class': 'single-select-input',
 			})
 		
 		self.fields['allowed_semesters'].label = 'Allowed semesters'
 		self.fields['allowed_semesters'].widget = forms.SelectMultiple(attrs={
-				'class': 'form-control',
+				'placeholder': 'Allowed Semesters',
+				'class': 'multi-select-input',
 			},choices=self.Meta.model.SEMESTER_CHOICES)
 
 class ElectiveForm(forms.ModelForm):
@@ -232,3 +244,9 @@ class ElectivePreferenceForm(forms.ModelForm):
 	class Meta:
 		model = Elective_Preference
 		fields = ['student','elective','priority_rank']
+		
+class COTAllotmentForm(forms.ModelForm):
+	class Meta:
+		model = COT_Allotment
+		fields = ['student','elective']
+		

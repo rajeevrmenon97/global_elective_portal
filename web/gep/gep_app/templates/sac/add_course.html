@@ -1,6 +1,11 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block js_files %}
+<script src="{% static 'gep_app/js/multi_select_widget.js' %}"></script>
+<script src="{% static 'gep_app/js/single_select_widget.js' %}"></script>
+{% endblock %}
+
 {% block main_content %}
 <div class="container-fluid">
 	<!--	NAVIGATION BAR    -->
@@ -14,10 +19,7 @@
 			<a class="nav-link" href="{% url 'sac_view_courses' %}">View Courses</a>
 		  </li>
 		  <li class="nav-item active">
-			<a class="nav-link" href="#">Add Course</a>
-		  </li>
-		  <li class="nav-item">
-			<a class="nav-link" href="{% url 'sac_add_exclusive_courses' %}">Mutually Exclusive Courses</a>
+			<a class="nav-link" href="{% url 'sac_add_course' %}">Add Course</a>
 		  </li>
 		</ul>
 	  </div>
@@ -63,7 +65,7 @@
 				<tr>
 					<td><label class="form-label" for="id_{{form.allowed_semesters.name}}">{{form.allowed_semesters.label}}</label></td>
 					<td>{{form.allowed_semesters}}{{form.allowed_semesters.errors}}</td>
-				</tr>				
+				</tr>
 			</tbody>
 		</table>
 		<input class="btn btn-success pl-4 pr-4 mb-4" type="submit" value="Next"/>

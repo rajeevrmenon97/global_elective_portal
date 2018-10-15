@@ -95,8 +95,16 @@ html,body {
     height: 27px;
 }
 
+.no-padding {
+	padding: 0;
+}
+
 .no-padding-left {
 	padding-left: 0;
+}
+
+.display-block {
+	display: block;
 }
 
 .no-padding-right {
@@ -110,6 +118,27 @@ html,body {
 .btn-small {
 	font-size: 12px;
 	padding: 0 6px;
+}
+
+.loader {
+	position: fixed;
+    top: calc(50% - 42.5px);
+    left: calc(50% - 42.5px);
+    z-index: 100;
+}
+
+.loading-spinner {
+    border: 8px solid #f3f3f3;
+    border-top: 8px solid #5CB85C;
+    border-radius: 50%;
+    width: 85px;
+    height: 85px;
+    animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 .form-label-title {
@@ -130,12 +159,63 @@ html,body {
 	border-radius: 50%;
 	padding: 5px 0;
 }
-/*
 
-#new-elective {
-	display: none;
+.multi-select-widget .dropdown-toggle,.single-select-widget .dropdown-toggle {
+	width: 100%;
+	border: 1px solid #ced4da;
+	text-align: left;
+    color: #495057;
+    background-color: #fff;
+    background-clip: padding-box;
 }
-*/
+
+.multi-select-widget .dropdown-toggle:focus,.single-select-widget .dropdown-toggle:focus {
+	border-color: transparent;
+	box-shadow: 0px 0px 5px #5CB85C;
+}
+
+.multi-select-widget .dropdown-toggle::after,.single-select-widget .dropdown-toggle::after {
+	border: 1px solid #ced4da;
+	display: inline-block;
+    width: 0;
+    height: 0;
+    vertical-align: .255em;
+    content: "";
+    float: right;
+    margin-left: .255em;
+    margin-right: -6.8px;
+    margin-top: 10px;
+    border-top: .35em solid;
+    border-right: .17em solid transparent;
+    border-left: .17em solid transparent;
+    border-bottom: 0;
+}
+
+.multi-select-widget .dropdown-menu,.single-select-widget .dropdown-menu {
+    width: 100%;
+    max-height: 200px;
+    overflow-y: scroll;
+}
+
+.multi-select-widget .dropdown-list-item,.single-select-widget .dropdown-list-item {
+	padding-left: 15px;
+}
+
+.multi-select-widget .dropdown-list-item:hover,.single-select-widget .dropdown-list-item:hover {
+	background-color: whitesmoke;
+}
+
+.multi-select-widget .dropdown-list-item .dropdown-list-checkbox {
+    height: 15px;
+    width: 15px;
+    margin-top: 4px;
+	margin-right: 5px;
+}
+
+.multi-select-widget .dropdown-list-item label,.single-select-widget .dropdown-list-item label {
+    margin-top: .25rem;
+    margin-bottom: .25rem;
+}
 
 @media screen and (max-width: 400px){
 	#login-container .form-container,#change-password-container .form-container {

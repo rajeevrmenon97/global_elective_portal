@@ -1,6 +1,11 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block js_files %}
+<script src="{% static 'gep_app/js/multi_select_widget.js' %}"></script>
+<script src="{% static 'gep_app/js/single_select_widget.js' %}"></script>
+{% endblock %}
+
 {% block main_content %}
 <div class="container-fluid">
 	<!--	NAVIGATION BAR    -->
@@ -26,13 +31,7 @@
 	</nav>
 	
 	<!--    MAIN CONTENT	-->
-	<div class="h4 col-sm-12 text-center">Stage 1: Submission of Academic Details</div>
-	{% if has_submitted %}
-	<div class="small col-sm-12 text-center text-success">Submitted</div>
-	{% endif %}
-	{% if not has_submitted %}
-	<div class="small col-sm-12 text-center text-danger">Not submitted</div>
-	{% endif %}
+	<div class="h4 col-sm-12 text-center">Stage 1: Submission of Academic Data</div>
 	<form action="{% url 'student_academic_data_submission' %}" method="post">
 		{% csrf_token %}
 		<div class="form-group">
@@ -44,36 +43,36 @@
 			<div class="form-control form-control-disabled">{{name}}</div>
 		</div>
 		<div class="form-group">
-			<label class="form-label" for="id_{{form.faculty_advisor.name}}">Faculty Advisor</label>
+			<label class="form-label" for="id_{{form.faculty_advisor.name}}">{{form.faculty_advisor.label}}</label>
 			{{form.faculty_advisor}}
 			{{form.faculty_advisor.errors}}
 		</div>
 		<div class="form-group">
-			<label class="form-label" for="id_{{form.next_semester.name}}">Registering semester</label>
+			<label class="form-label" for="id_{{form.next_semester.name}}">{{form.next_semester.label}}</label>
 			{{form.next_semester}}
 			{{form.next_semester.errors}}
 		</div>
 		<div class="form-group">
-			<label class="form-label" for="id_{{form.current_cgpa.name}}">CGPA upto previous semester</label>
+			<label class="form-label" for="id_{{form.current_cgpa.name}}">{{form.current_cgpa.label}}</label>
 			{{form.current_cgpa}}
 			{{form.current_cgpa.errors}}
 		</div>
 		<div class="form-group">
-			<label class="form-label" for="id_{{form.required_elective_count.name}}">Number of global electives to be taken in coming semester (Including overloading)</label>
+			<label class="form-label" for="id_{{form.required_elective_count.name}}">{{form.required_elective_count.label}}</label>
 			{{form.required_elective_count}}
 			{{form.required_elective_count.errors}}
 		</div>
 		<div class="form-group">
-			<label class="form-label" for="id_{{form.past_courses.name}}">Electives that are taken before</label>
+			<label class="form-label" for="id_{{form.past_courses.name}}">{{form.past_courses.label}}</label>
 			{{form.past_courses}}
 			{{form.past_courses.errors}}
 		</div>
 		<div class="form-group">
-			<label class="form-label" for="id_{{form.core_slots.name}}">Slots of core courses to be taken in coming semester (Including overloading)</label>
+			<label class="form-label" for="id_{{form.core_slots.name}}">{{form.core_slots.label}}</label>
 			{{form.core_slots}}
 			{{form.core_slots.errors}}
 		</div>
-		<input class="btn btn-success" type="submit" value="Submit"/>
+		<input class="btn btn-success mb-2" type="submit" value="Submit"/>
 	</form>
 </div>
 {% endblock %}
