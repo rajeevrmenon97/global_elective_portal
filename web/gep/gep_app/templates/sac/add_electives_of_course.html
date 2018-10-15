@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block main_content %}
+<div class="container-fluid">
+<!--
+	<div class="row">
+	<nav class="col-9 navbar navbar-expand-sm navbar-light mb-3 style="background-color: transparent;"">
+	  <button class="navbar-toggler navbar-toggler-small" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+		<span class="navbar-toggler-icon navbar-toggler-icon-small"></span>
+	  </button>
+	  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+		<ul class="navbar-nav mr-auto">
+		  <li class="nav-item">
+			<a class="nav-link" href="#">View courses with COT</a>
+		  </li>
+		  <li class="nav-item active">
+			<a class="nav-link" href="#">Add Elective</a>
+		  </li>
+		</ul>
+	  </div>
+	</nav>
+    <a class="col-3 text-right btn btn-link text-success" href="{% url 'logout' %}">Logout</a>
+	</div>
+-->
+	<div class="h5 col-12 text-center text-success">{{course}}</div>
+	
+	<!--	Display error messages (if any)	-->
+	{% if messages %}
+	<ul class="messages">
+		{% for message in messages %}
+			{% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+			<li {% if message.tags %} class="{{ message.tags }} errorlist"{% endif %}>{{ message }}</li>
+			{% endif %}
+		{% endfor %}
+	</ul>
+	{% endif %}
+	
+	<table class="table table-hover">
+		<tbody>
+			{% for elective in electives %}
+			<tr>
+				<td>
+					<label class="form-label">Slot</label>
+					<div>{{ elective.slot }}</div>
+				</td>
+				<td>
+					<label class="form-label">Faculty</label>
+					<div>{{ elective.faculty|default_if_none:"Not Alloted" }}</div>
+				</td>
+				{% for elective_seat in elective_seats %}
+				{% if elective_seat.elective == elective %}
+				<td>
+					<label class="form-label">{{ elective_seat.dept.name }}</label>	
+					<div>{{ elective_seat.max_seats }}</div>	
+				</td>
+				{% endif %}
+				{% endfor %}
+				<td>
+					<form action="{% url 'sac_delete_elective_slot' %}" method="post">
+						{% csrf_token %}
+						<input type="hidden" value="{{course.course_id}}" name="course_id">
+						<input type="hidden" value="{{elective.slot}}" name="slot">
+						<input class="btn btn-danger" type="submit" value="Remove">
+					</form>
+				</td>
+			</tr>
+			{% endfor %}
+			<tr>
+				<form action="{% url 'sac_add_elective_slot' %}" method="post">
+					{% csrf_token %}
+					<td>
+						<label class="form-label" for="id_{{elective_form.slot.name}}">{{elective_form.slot.label}}</label>
+						{{ elective_form.slot }}
+					</td>
+					<td>
+						<label class="form-label" for="id_{{elective_form.faculty.name}}">{{elective_form.faculty.label}}</label>
+						{{ elective_form.faculty}}
+					</td>
+					{{ elective_seats_formset.management_form }}
+					{% for elective_seat_form in elective_seats_formset %}
+					<td>
+						<label class="form-label">{{elective_seat_form.dept_name.value}}</label>
+						{{elective_seat_form.dept_name}}
+						{{elective_seat_form.max_seats}}
+					</td>
+					{% endfor %}
+					<input type="hidden" value="{{course.course_id}}" name="course">
+					<td>
+						<input class="btn btn-success pl-4 mt-3 pr-4" type="submit" value="Add">
+					</td>
+				</form>
+			</tr>
+		</tbody>
+	</table>
+</div>
+{% endblock %}

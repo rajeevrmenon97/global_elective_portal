@@ -26,11 +26,16 @@ urlpatterns = [
 	path('sac/startup/department',views.startup_dept,name='startup_dept'),
 	path('sac/startup/student',views.startup_student,name='startup_student'),
 	path('sac/startup/faculty',views.startup_faculty,name='startup_faculty'),
-	path('sac/elective',views.sac_view_electives,name='sac_view_electives'),
+	path('sac/elective/view',views.sac_view_electives,name='sac_view_electives'),
+	path('sac/elective/edit',views.sac_edit_elective,name='sac_edit_elective'),
+	path('sac/elective/delete',views.sac_delete_elective,name='sac_delete_elective'),
 	path('sac/elective/add',views.sac_add_elective,name='sac_add_elective'),
-	path('sac/elective/slot',views.sac_add_elective_slot,name='sac_add_elective_slot'),
+	path('sac/elective/slot/view',views.sac_view_elective_slots,name='sac_view_elective_slots'),
+	path('sac/elective/slot/add',views.sac_add_elective_slot,name='sac_add_elective_slot'),
+	path('sac/elective/slot/delete',views.sac_delete_elective_slot,name='sac_delete_elective_slot'),
 	path('sac/cot',views.sac_consent_of_teacher,name='sac_consent_of_teacher'),
 	path('sac/academic',views.sac_academic_data,name='sac_academic_data'),
+	path('sac/allotment',views.sac_allotment_data,name='sac_allotment_data'),
 	
 	###########################
 	#   Faculty Portal Views  #

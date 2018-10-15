@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block main_content %}
+<div class="container-fluid">
+	<a class="col-sm-12 text-right btn btn-link text-success" href="{% url 'logout' %}">Logout</a>
+	<form action="{% url 'sac_add_elective' %}" method="post">
+		{% csrf_token %}
+		<table class="table table-hover">
+			<tbody>
+				<tr>
+					<td><label class="form-label" for="id_{{form.course_id.name}}">{{form.course_id.label}}</label></td>
+					<td>{{ form.course_id}}{{form.course_id.errors}}</td>
+				</tr>
+				<tr>
+					<td><label class="form-label" for="id_{{form.name.name}}">{{form.name.label}}</label></td>
+					<td>{{form.name}}{{form.name.errors}}</td>
+				</tr>
+				<tr>
+					<td><label class="form-label" for="id_{{form.dept.name}}">{{form.dept.label}}</label></td>
+					<td>{{form.dept}}{{form.dept.errors}}</td>
+				</tr>
+				<tr>
+					<td><label class="form-label" for="id_{{form.credits.name}}">{{form.credits.label}}</label></td>
+					<td>{{form.credits}}{{form.credits.errors}}</td>
+				</tr>
+				<tr>
+					<td><label class="form-label" for="id_{{form.pre_requisites.name}}">{{form.pre_requisites.label}}</label></td>
+					<td>{{form.pre_requisites}}{{form.pre_requisites.errors}}</td>
+				</tr>
+				<tr>
+					<td><label class="form-label" for="id_{{form.cot_requisite.name}}">{{form.cot_requisite.label}}</label></td>
+					<td>{{form.cot_requisite}}{{form.cot_requisite.errors}}</td>
+				</tr>
+				<tr>
+					<td><label class="form-label" for="id_{{form.cgpa_cutoff.name}}">{{form.cgpa_cutoff.label}}</label></td>
+					<td>{{form.cgpa_cutoff}}{{form.cgpa_cutoff.errors}}</td>
+				</tr>
+				<tr>
+					<td><label class="form-label" for="id_{{form.mode_of_allotment.name}}">{{form.mode_of_allotment.label}}</label></td>
+					<td>{{form.mode_of_allotment}}{{form.mode_of_allotment.errors}}</td>
+				</tr>				
+			</tbody>
+		</table>
+		<input class="btn btn-success pl-4 pr-4" type="submit" value="Next"/>
+	</form>
+</div>
+{% endblock %}

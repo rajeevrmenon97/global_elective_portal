@@ -193,7 +193,7 @@ class ElectiveCreationForm(forms.ModelForm):
 			})
 		
 class ElectiveSeatsCreationForm(forms.Form):
-	"""Form for editing or adding elective seats"""
+	"""Form for adding elective seats"""
 	dept_name = forms.CharField(max_length=100)
 	max_seats = forms.IntegerField(min_value=0)
 		
@@ -226,21 +226,3 @@ class ElectiveSeatsCreationForm(forms.Form):
 			Elective_Seats.objects.filter(elective=elective,dept=self.dept).delete()
 			elective_seat.save()
 		return elective_seat
-	
-#    def clean_password(self):
-#        cleaned_data = super().clean()
-#        password = cleaned_data.get('password')
-#        validate_password(password)
-	
-#    def clean(self):
-#        cleaned_data = super().clean()
-#        username = cleaned_data.get('username')
-#        password = cleaned_data.get('password')
-#        try:
-#            student = Student.objects.get(roll_number=username,password=password)
-#        except ObjectDoesNotExist:
-#            error_msg = 'Invalid username or password'
-#            self.add_error('username',error_msg)
-#            self.add_error('password',error_msg)
-
-#        return cleaned_data

@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.http import Http404, JsonResponse
+from django.http import Http404, JsonResponse, StreamingHttpResponse, HttpResponse
 from django.contrib.auth import authenticate, login as auth_login , logout as auth_logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db.models import Q
@@ -11,6 +11,17 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.core import exceptions
 from django.conf import settings
+import csv
+from io import BytesIO
+from zipfile import ZipFile
+
+class Echo:
+    """An object that implements just the write method of the file-like
+    interface.
+    """
+    def write(self, value):
+        """Write the value by returning it, instead of storing in a buffer."""
+        return value
 
 					##########################################
 					#       User Passes Test Functions       #
@@ -292,6 +303,14 @@ def add_error_messages_to_request(request,form,line_number):
 	for field,errors in errorlist.items():
 		for error in errors:
 			messages.error(request,'In line %d %s: %s' %(line_number, field, error))
+			
+
+def convert_form_errors(form):
+	""" Convert form errors to string"""
+	errorlist = form.errors
+	for field,errors in errorlist.items():
+		for error in errors:
+			return 'Error in %s: %s' %(field, error)
 	
 ##########################################
 #              Startup Page              #
@@ -310,111 +329,53 @@ def sac_home(request):
 @user_passes_test(sac_check)
 def startup_dept(request):
 	""" Uploads Department data to database """
-	if request.method == 'POST' and pre_academic_data_submission_stage_check():
-		# Clear Complete Database
-		Student.objects.all().delete()
-		Faculty.objects.all().delete()
-		Department.objects.all().delete()
-		get_user_model().objects.filter(~Q(role=get_user_model().SAC)).delete()
-		
-		# Get the department data from uploaded CSV
-		departments_data = get_data_from_csv(request,'sac_home','departments_file')
+	if request.method == 'POST':
+		if pre_academic_data_submission_stage_check():
+			# Clear Complete Database
+			Student.objects.all().delete()
+			Faculty.objects.all().delete()
+			Department.objects.all().delete()
+			get_user_model().objects.filter(~Q(role=get_user_model().SAC)).delete()
 
-		lines = departments_data.split("\n")[1:]
-		for index, line in enumerate(lines):
-			fields = line.split(",")
-			username = fields[0].strip()
-			name = fields[1].strip()
-			email = fields[2].strip()
-			
-			# Create user for department
-			user_dict = {
-				'username': username,
-				'email': email,
-				'role': get_user_model().DEPARTMENT,
-			}
-			user_form = UserForm(user_dict)
-			if user_form.is_valid():
-				user = form.save()
-				# Set default password
-				user.set_password('DEPTARTMENT')
-				user.save()
-				
-				# Create department
-				dept_dict = {
-					'user':user.username,
-					'name':name,
+			# Get the department data from uploaded CSV
+			departments_data = get_data_from_csv(request,'sac_home','department_file')
+
+			lines = departments_data.split("\n")[1:]
+			for index, line in enumerate(lines):
+				fields = line.split(",")
+				username = fields[0].strip()
+				name = fields[1].strip()
+				email = fields[2].strip()
+
+				# Create user for department
+				user_dict = {
+					'username': username,
+					'email': email,
+					'role': get_user_model().DEPARTMENT,
 				}
-				dept_form = DepartmentForm(dept_dict)
-				if dept_form.is_valid():
-					dept_form.save()			
+				user_form = UserForm(user_dict)
+				if user_form.is_valid():
+					user = form.save()
+					# Set default password
+					user.set_password('DEPTARTMENT')
+					user.save()
+
+					# Create department
+					dept_dict = {
+						'user':user.username,
+						'name':name,
+					}
+					dept_form = DepartmentForm(dept_dict)
+					if dept_form.is_valid():
+						dept_form.save()			
+					else:
+						messages.error(request, 'Line ' + str(index+1) + convert_form_errors(dept_form))
+						break
 				else:
-					add_error_messages_to_request(request,dept_form,index+1)
+					messages.error(request, 'Line ' + str(index+1) + convert_form_errors(user_form))
 					break
-			else:
-				add_error_messages_to_request(request,user_form,index+1)
-				break
-	elif not pre_academic_data_submission_stage_check():
-		messages.error(request, 'This data can be updated only before academic data submission stage')
-				
-	return redirect('sac_home')
-
-##########################################
-#           Upload Student Data          #
-##########################################
-
-@login_required
-@user_passes_test(sac_check)
-def startup_student(request):
-	""" Uploads Student data to database """
-	if request.method == 'POST' and pre_academic_data_submission_stage_check():
-		# Clear the Student Database
-		Student.objects.all().delete()
-		get_user_model().objects.filter(role=get_user_model().STUDENT).delete()
-		
-		# Get the student data from uploaded CSV
-		students_data = get_data_from_csv(request,'sac_home','students_file')
-
-		lines = students_data.split("\n")[1:]
-		for index, line in enumerate(lines):
-			fields = line.split(",")
-			username = fields[0].strip()
-			name = fields[1].strip()
-			email = fields[2].strip()
-			date_of_birth = fields[3].strip()
-			dept = fields[4].strip()
-			
-			# Create user for student
-			user_dict = {
-				'username': username,
-				'email': email,
-				'role': get_user_model().STUDENT,
-			}
-			user_form = UserForm(user_dict)
-			if user_form.is_valid():
-				user = user_form.save()
-				# Set default password
-				user.set_password(user.username)
-				user.save()
-				
-				# Create student
-				student_dict = {
-					'user':user.username,
-					'name':name,
-					'date_of_birth':date_of_birth,
-					'dept':dept,
-				}
-				student_form = StudentForm(student_dict)
-				if student_form.is_valid():
-					student_form.save()			
-				else:
-					add_error_messages_to_request(request,student_form,index+1)
-					break
-			else:
-				add_error_messages_to_request(request,user_form,index+1)
-				break
-	elif not pre_academic_data_submission_stage_check():
-		messages.error(request, 'This data can be updated only before academic data submission stage')
+		else:
+			messages.error(request, 'This data can be updated only before academic data submission stage')
 				
 	return redirect('sac_home')
 
@@ -426,194 +387,427 @@ def startup_student(request):
 @user_passes_test(sac_check)
 def startup_faculty(request):
 	""" Uploads Faculty data to database """
-	if request.method == 'POST' and pre_academic_data_submission_stage_check():
-		# Clear the Student and Faculty Database
-		Student.objects.all().delete()
-		Faculty.objects.all().delete()
-		get_user_model().objects.filter(role=get_user_model().FACULTY).delete()
-		get_user_model().objects.filter(role=get_user_model().STUDENT).delete()
-		
-		# Get the student data from uploaded CSV
-		faculties_data = get_data_from_csv(request,'sac_home','faculties_file')
+	if request.method == 'POST':
+		if pre_academic_data_submission_stage_check():
+			# Clear the Student and Faculty Database
+			Student.objects.all().delete()
+			Faculty.objects.all().delete()
+			get_user_model().objects.filter(role=get_user_model().FACULTY).delete()
+			get_user_model().objects.filter(role=get_user_model().STUDENT).delete()
 
-		lines = faculties_data.split("\n")[1:]
-		for index, line in enumerate(lines):
-			fields = line.split(",")
-			username = fields[0].strip()
-			name = fields[1].strip()
-			email = fields[2].strip()
-			dept = fields[3].strip()
-			
-			# Create user for faculty
-			user_dict = {
-				'username': username,
-				'email': email,
-				'role': get_user_model().FACULTY,
-			}
-			user_form = UserForm(user_dict)
-			if user_form.is_valid():
-				user = user_form.save()
-				# Set default password
-				user.set_password('FACULTY')
-				user.save()
-				
-				# Create student
-				faculty_dict = {
-					'user':user.username,
-					'name':name,
-					'dept':dept,
+			# Get the faculty data from uploaded CSV
+			faculties_data = get_data_from_csv(request,'sac_home','faculty_file')
+
+			lines = faculties_data.split("\n")[1:]
+			for index, line in enumerate(lines):
+				fields = line.split(",")
+				username = fields[0].strip()
+				name = fields[1].strip()
+				email = fields[2].strip()
+				dept = fields[3].strip()
+
+				# Create user for faculty
+				user_dict = {
+					'username': username,
+					'email': email,
+					'role': get_user_model().FACULTY,
 				}
-				faculty_form = FacultyForm(faculty_dict)
-				if faculty_form.is_valid():
-					faculty_form.save()			
+				user_form = UserForm(user_dict)
+				if user_form.is_valid():
+					user = user_form.save()
+					# Set default password
+					user.set_password('FACULTY')
+					user.save()
+
+					# Create student
+					faculty_dict = {
+						'user':user.username,
+						'name':name,
+						'dept':dept,
+					}
+					faculty_form = FacultyForm(faculty_dict)
+					if faculty_form.is_valid():
+						faculty_form.save()			
+					else:
+						messages.error(request, 'Line ' + str(index+1) + convert_form_errors(faculty_form))
+						break
 				else:
-					add_error_messages_to_request(request,faculty_form,index+1)
+					messages.error(request, 'Line ' + str(index+1) + convert_form_errors(user_form))
 					break
-			else:
-				add_error_messages_to_request(request,user_form,index+1)
-				break
-	elif not pre_academic_data_submission_stage_check():
-		messages.error(request, 'This data can be updated only before academic data submission stage')
+		else:
+			messages.error(request, 'This data can be updated only before academic data submission stage')
 				
 	return redirect('sac_home')
 
+
 ##########################################
-#              Academic Page             #
+#           Upload Student Data          #
 ##########################################
 
 @login_required
 @user_passes_test(sac_check)
-def sac_academic_data(request):
-	pass
+def startup_student(request):
+	""" Uploads Student data to database """
+	if request.method == 'POST':
+		if pre_academic_data_submission_stage_check():
+			# Clear the Student Database
+			Student.objects.all().delete()
+			get_user_model().objects.filter(role=get_user_model().STUDENT).delete()
+
+			# Get the student data from uploaded CSV
+			students_data = get_data_from_csv(request,'sac_home','student_file')
+
+			lines = students_data.split("\n")[1:]
+			for index, line in enumerate(lines):
+				fields = line.split(",")
+				username = fields[0].strip()
+				name = fields[1].strip()
+				email = fields[2].strip()
+				date_of_birth = fields[3].strip()
+				dept = fields[4].strip()
+
+				# Create user for student
+				user_dict = {
+					'username': username,
+					'email': email,
+					'role': get_user_model().STUDENT,
+				}
+				user_form = UserForm(user_dict)
+				if user_form.is_valid():
+					user = user_form.save()
+					# Set default password
+					user.set_password(user.username)
+					user.save()
+
+					# Create student
+					student_dict = {
+						'user':user.username,
+						'name':name,
+						'date_of_birth':date_of_birth,
+						'dept':dept,
+					}
+					student_form = StudentForm(student_dict)
+					if student_form.is_valid():
+						student_form.save()			
+					else:
+						messages.error(request, 'Line ' + str(index+1) + convert_form_errors(student_form))
+						break
+				else:
+					messages.error(request, 'Line ' + str(index+1) + convert_form_errors(user_form))
+					break
+		else:
+			messages.error(request, 'This data can be updated only before academic data submission stage')
+				
+	return redirect('sac_home')
 
 ##########################################
-#                 COT Page               #
+#             Upload COT Data            #
 ##########################################
 
 @login_required
 @user_passes_test(sac_check)
 def sac_consent_of_teacher(request):
-	if request.method == 'POST' and pre_preference_submission_stage_check():
-		# Clear the Database
-		COT_Allotment.objects.all().delete()
-		
-		# Get the COT data from uploaded CSV
-		cot_data = get_data_from_csv(request,'sac_home','cot_file')
+	""" Uploads COT data to database """
+	if request.method == 'POST':
+		if pre_preference_submission_stage_check():
+			# Clear the Database
+			COT_Allotment.objects.all().delete()
 
-		lines = cot_data.split("\n")[1:]
-		for index, line in enumerate(lines):
-			fields = line.split(",")
-			course = fields[0].strip()
-			slot = fields[1].strip()
-			student = fields[2].strip()
-			
-			try:
-				elective = Elective.objects.get(course=course,slot=slot)
-				
-				# Create COT allotment
-				cot_dict = {
-					'elective': elective,
-					'student': student,
-				}
-				cot_allotment_form = COTAllotmentForm(cot_dict)
+			# Get the COT data from uploaded CSV
+			cot_data = get_data_from_csv(request,'sac_home','cot_file')
 
-				if cot_allotment_form.is_valid():
-					cot_allotment_form.save()				
-				else:
-					add_error_messages_to_request(request,cot_allotment_form,index+1)
+			lines = cot_data.split("\n")[1:]
+			for index, line in enumerate(lines):
+				fields = line.split(",")
+				course = fields[0].strip()
+				slot = fields[1].strip()
+				student = fields[2].strip()
+
+				try:
+					elective = Elective.objects.get(course=course,slot=slot)
+
+					# Create COT allotment
+					cot_dict = {
+						'elective': elective,
+						'student': student,
+					}
+					cot_allotment_form = COTAllotmentForm(cot_dict)
+
+					if cot_allotment_form.is_valid():
+						cot_allotment_form.save()				
+					else:
+						messages.error(request, 'Line ' + str(index+1) + convert_form_errors(cot_allotment_form))
+						break
+				except:
+					messages.error(request, 'Invalid course or slot in line ' + str(index+1))
 					break
-			except:
-				messages.error(request, 'Invalid course or slot in line ' + str(index+1))
-				break
-	elif not pre_preference_submission_stage_check():
-		messages.error(request, 'This data can be updated only before preference submission stage')
 
-	return render(request, 'sac/consent_of_teacher.html')
+		else:
+			messages.error(request, 'This data can be updated only before preference submission stage')
+
+	return redirect('sac_home')
+
+##########################################
+#         Download Academic Data         #
+##########################################
+
+@login_required
+@user_passes_test(sac_check)
+def sac_academic_data(request):
+	""" Download Student's academic data as a zip file of csv files, one csv file per department """
+	# Create a buffer to store the zip file
+	in_memory = BytesIO()
+	
+	# Create a zip file
+	zip = ZipFile(in_memory, "w")       
+	
+	# Create a csv file for each department containing academic data of students of that department
+	depts = Department.objects.all().order_by('name')
+	for dept in depts:
+		# Create a buffer for csv file
+		pseudo_buffer = Echo()
+		writer = csv.writer(pseudo_buffer)
+		
+		# Write the titles into the csv as first row
+		title_row = ['Faculty Advisor','Next Semester','Current CGPA']
+		data = writer.writerow(title_row)
+		
+		# Write the academic data of each student into the csv
+		students = Student.objects.filter(dept=dept).order_by('FA','next_semester','name')
+		for student in students:
+			row = [student.FA.name, student.next_semester , student.current_CGPA]
+			data = writer.writerow(row)
+		
+		# Write the file into the zip file with the name of the file as the department name
+		zip.writestr("%s.csv" %(dept.name) ,data)
+
+	# Fix for Linux zip files read in Windows
+	for file in zip.filelist:
+		file.create_system = 0 
+
+	# Close the zip file
+	zip.close()
+
+	# Return the zip file as a HttpResponse
+	response = HttpResponse(content_type="application/zip")
+	response["Content-Disposition"] = "attachment; filename=AcademicData.zip"
+	in_memory.seek(0)    
+	response.write(in_memory.read())
+	return response
+
+##########################################
+#         Download Allotment Data        #
+##########################################
+
+@login_required
+@user_passes_test(sac_check)
+def sac_allotment_data(request):
+	""" Download Allotment data as a csv file """
+	# Create a buffer for csv file
+	pseudo_buffer = Echo()
+	writer = csv.writer(pseudo_buffer)
+	
+	# Write the titles into the csv as first row
+	title_row = ['Course ID','Course Name','Slot','Roll Number','Student Name', 'Semester']
+	data = writer.writerow(title_row)
+	
+	# Write the allotment data of all students to the csv file
+	allotments = Elective_Allotment.objects.all().order_by('elective__course__dept','elective__course__name','elective__slot','student__next_semester','student__name')
+	for allotment in allotments:
+		row = [allotment.elective.course.course_id, allotment.elective.course.name, allotment.elective.slot, allotment.student.user.username, allotment.student.name, allotment.student.next_semester]
+		data = writer.writerow(row)
+	
+	# Return the csv file as a HttpResponse
+	response = StreamingHttpResponse(data, content_type="text/csv")
+	response['Content-Disposition'] = 'attachment; filename="allotment.csv"'
+	return response
+
+##########################################
+#            Manage Electives            #
+##########################################
+
+##########################################
+#              View Courses              #
+##########################################
 
 @login_required
 @user_passes_test(sac_check)
 def sac_view_electives(request):
-	context = {}
-	return render(request, 'sac/view_electives.html', context)	
+	courses = Course.objects.all().order_by('dept__name','name')
+	context = {
+		'courses':courses,
+	}
+	return render(request, 'sac/view_electives.html', context)
+
+##########################################
+#               Add Course               #
+##########################################
 
 @login_required
 @user_passes_test(sac_check)
-def sac_add_elective(request):
-	#Create formset for Elective Seats of each department
-	depts = Department.objects.all().order_by('name')
-	ElectiveSeatsCreationFormSet = formset_factory(ElectiveSeatsCreationForm, extra=0)
-	elective_seats_formset = ElectiveSeatsCreationFormSet(initial=[{'dept_name': dept.name} for dept in depts])
-
-	context = {
-		'is_course_submitted':False,
-		'elective_seats_formset':elective_seats_formset,
-	}
-	
+def sac_add_elective(request):	
 	if request.method == 'POST':
 		try:
-			course = Course.objects.get(course_id=request.POST.get('course_id'))
-			course_form = CourseCreationForm(request.POST,instance=course)
-			context['course'] = course
+			course_id = request.POST.get('course_id')
+			course = Course.objects.get(course_id=course_id)
+			form = CourseCreationForm(request.POST,instance=course)
 		except:
-			course_form = CourseCreationForm(request.POST)
-		if course_form.is_valid():
-			course = course_form.save()
-			context['course'] = course
-			context['electives'] = Elective.objects.filter(course=course)
-			context['elective_seats'] = Elective_Seats.objects.filter(elective__course=course).order_by('dept__name')
-			context['elective_form'] = ElectiveCreationForm(initial={course:course})
-			context['is_course_submitted'] = True
+			form = CourseCreationForm(request.POST)
+			
+		if form.is_valid():
+			course = form.save()
+			request.session['course_id'] = course.course_id
+			return redirect('sac_view_elective_slots')
 	else:
-		course_form = CourseCreationForm()
-		context['elective_form'] = ElectiveCreationForm()
+		form = CourseCreationForm()
 		
-	context['course_form'] = course_form
+	context = {
+		'form':form,
+	}
+	
 	return render(request, 'sac/add_elective.html', context)
+
+##########################################
+#              Edit Course               #
+##########################################
+
+@login_required
+@user_passes_test(sac_check)
+def sac_edit_elective(request):
+	if request.method == 'POST':
+		try:
+			course_id = request.POST.get('course_id')
+			course = Course.objects.get(course_id=course_id)
+			form = CourseCreationForm(instance=course)
+
+			context = {
+				'form':form,
+			}
+			return render(request, 'sac/add_elective.html', context)
+		except:
+			pass
+		
+	raise Http404
+
+##########################################
+#             Delete Course              #
+##########################################
+	
+@login_required
+@user_passes_test(sac_check)
+def sac_delete_elective(request):
+	if request.method == 'POST':
+		try:
+			course_id = request.POST.get('course_id')
+			Course.objects.get(course_id=course_id).delete()
+			return redirect('sac_view_electives')
+		except:
+			pass
+	
+	raise Http404
+
+##########################################
+#       View Electives of a Course       #
+##########################################
+
+@login_required
+@user_passes_test(sac_check)
+def sac_view_elective_slots(request):
+	try:
+		#Get course
+		course_id = request.session.get('course_id')
+		course = Course.objects.get(course_id=course_id)			
+		#Get electives
+		electives = Elective.objects.filter(course=course)
+		#Get elective seats
+		elective_seats = Elective_Seats.objects.filter(elective__course=course).order_by('dept__name')
+
+		#Create form for electives
+		elective_form = ElectiveCreationForm(initial={course:course})
+		#Create formset for Elective Seats of each department
+		depts = Department.objects.all().order_by('name')
+		ElectiveSeatsCreationFormSet = formset_factory(ElectiveSeatsCreationForm, extra=0)
+		elective_seats_formset = ElectiveSeatsCreationFormSet(initial=[{'dept_name': dept.name} for dept in depts])
+
+		context = {
+			'course':course,
+			'electives':electives,
+			'elective_seats':elective_seats,
+			'elective_form':elective_form,
+			'elective_seats_formset':elective_seats_formset,
+		}
+
+		return render(request,'sac/add_elective_slots.html',context)
+
+	except:
+		raise Http404
+
+##########################################
+#        Add Elective of a Course        #
+##########################################
 
 @login_required
 @user_passes_test(sac_check)
 def sac_add_elective_slot(request):
-	#Create formset for Elective Seats of each department
-	depts = Department.objects.all().order_by('name')
-	ElectiveSeatsCreationFormSet = formset_factory(ElectiveSeatsCreationForm, extra=0)
-	elective_seats_formset = ElectiveSeatsCreationFormSet(initial=[{'dept_name': dept.name} for dept in depts])
-
-	data = dict()
-	data['valid'] = False
-	
 	if request.method == 'POST':
 		try:
-			course = Course.objects.get(course_id=request.POST.get('course'))
-		except:
-			data['error'] = 'Invalid course ' + request.POST.get('course')
-			return JsonResponse(data)
-		
-		try:
-			elective = Elective.cts.get(course=course,slot=request.POST.get('slot'))
-			elective_form = ElectiveCreationForm(request.POST,instance=elective)
-		except:
-			elective_form = ElectiveCreationForm(request.POST)
+			#Check course has been modified
+			saved_course_id = request.session.get('course_id')
+			course_id = request.POST.get('course_id')
 			
-		elective_seats_formset = ElectiveSeatsCreationFormSet(request.POST)
+			if saved_course_id == course_id:
+				elective_form = ElectiveCreationForm(request.POST)
+				depts = Department.objects.all().order_by('name')
+				ElectiveSeatsCreationFormSet = formset_factory(ElectiveSeatsCreationForm, extra=0)
+				elective_seats_formset = ElectiveSeatsCreationFormSet(request.POST)
+
+				if elective_form.is_valid():
+					if elective_seats_formset.is_valid():
+							elective = elective_form.save()
+							for elective_seat_form in elective_seats_formset:
+								elective_seat_form.save(elective)
+					else:
+						messages.error(request, 'Invalid number of seats')
+				else:
+					messages.error(request,convert_form_errors(elective_form))
+			else:
+				messages.error(request, 'Incorrect course')
+		except:
+			raise Http404
+	else:
+		raise Http404
+			
+	return redirect('sac_view_elective_slots')
+
+##########################################
+#       Delete Elective of a Course      #
+##########################################
 	
-		if elective_form.is_valid() and elective_seats_formset.is_valid() and not elective_seats_formset.has_changed():
-			data['valid'] = True
-			elective = elective_form.save()
-			for elective_seat_form in elective_seats_formset:
-				elective_seat_form.save(elective)
+@login_required
+@user_passes_test(sac_check)
+def sac_delete_elective_slot(request):
+	if request.method == 'POST':
+		try:
+			#Get course
+			course_id = request.POST.get('course_id')
+			course = Course.objects.get(course_id=course_id)
 			
-		elif elective_seats_formset.has_changed():
-			data['error'] = 'Corrupted data, please reload' 
-		elif 'max_seats' in elective_seats_formset.errors:
-			data['error'] = 'Invalid seat number' 
-		elif 'dept' in elective_seats_formset.errors:
-			data['error'] = 'Invalid department' 
-		elif 'slot' in elective_form.errors:
-			data['error'] = 'Invalid slot' 
-		elif 'faculty' in elective_form.errors:
-			data['error'] = 'Invalid faculty'
-	print(data)
-	return JsonResponse(data)
+			#Check course has been modified
+			saved_course_id = request.session.get('course_id')
+			if saved_course_id == course_id:
+				try:
+					slot = request.POST.get('slot')
+					Elective.objects.get(course=course,slot=slot).delete()
+				except:
+					messages.error(request, 'Invalid slot')
+			else:
+				messages.error(request, 'Incorrect course')
+		except:
+			raise Http404
+	else:
+		raise Http404
+		
+	return redirect('sac_view_elective_slots')
 
 						##########################################
 						#             Faculty Portal             #

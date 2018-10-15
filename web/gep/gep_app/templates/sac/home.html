@@ -2,36 +2,7 @@
 {% load static %}
 {% block main_content %}
 <div class="container-fluid">
-	<!--	NAVIGATION BAR    -->
-	<div class="row">
-	<nav class="col-9 navbar navbar-expand-sm navbar-light mb-3 style="background-color: transparent;"">
-	  <button class="navbar-toggler navbar-toggler-small" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-		<span class="navbar-toggler-icon navbar-toggler-icon-small"></span>
-	  </button>
-	  <div class="collapse navbar-collapse" id="navbarSupportedContent">
-		<ul class="navbar-nav mr-auto">
-		  <li class="nav-item active">
-			<a class="nav-link" href="#">Startup</a>
-		  </li>
-		  <li class="nav-item">
-			<a class="nav-link" href="#">Electives</a>
-		  </li>
-		  <li class="nav-item">
-			<a class="nav-link" href="#">Academic data (dept|FA)</a>
-		  </li>
-		  <li class="nav-item">
-			<a class="nav-link" href="#">COT Allotment</a>
-		  </li>
-		  <li class="nav-item">
-			<a class="nav-link" href="#">Elective Allotment</a>
-		  </li>
-		</ul>
-	  </div>
-	</nav>
-    <a class="col-3 text-right btn btn-link text-success" href="{% url 'logout' %}">Logout</a>
-	</div>
-	
-	<!--    MAIN CONTENT	-->
+	<a class="col-sm-12 text-right btn btn-link text-success" href="{% url 'logout' %}">Logout</a>
 	<div class="h2 text-center text-success font-weight-bold">Global Elective Allotment Startup</div>
 	<div class="h6 font-weight-bold mt-3">Follow these steps in the given order to start the Global Elective Allotment process. </div>
 	<!--	Display error messages (if any)	-->
@@ -45,39 +16,9 @@
 	</ul>
 	{% endif %}
 	<ul class="list-group">
-		<!--	Upload Department data file	-->
-		<li class="list-group-item">
-			<div>1) Upload Department data file as csv in the following format. Password of each department will be 'DEPARTMENT'.</div>
-			<img class="mt-2" src="{% static 'gep_app/images/department.png' %}">
-			<form action="{% url 'startup_dept' %}" method="post" enctype="multipart/form-data">
-				{% csrf_token %}
-				<input required type="file" id="departments_file" name="departments_file">
-				<input class="btn btn-success mt-4" type="submit" value="Upload">
-			</form>
-		</li>
-		<!--	Upload Faculty data file	-->
-		<li class="list-group-item">
-			<div>2) Upload Faculty data file as csv in the following format. Username of the faculty will be same as their email and password will be 'FACULTY'.</div>
-			<img class="mt-2" src="{% static 'gep_app/images/faculty.png' %}">
-			<form action="{% url 'startup_faculty' %}" method="post" enctype="multipart/form-data">
-				{% csrf_token %}
-				<input required type="file" id="faculties_file" name="faculties_file">
-				<input class="btn btn-success mt-4" type="submit" value="Upload">
-			</form>
-		</li>
-		<!--	Upload Student data file	-->
-		<li class="list-group-item">
-			<div>3) Upload Student data file as csv in the following format. Username and password of each student will be their roll number in block letters.</div>
-			<img class="mt-2" src="{% static 'gep_app/images/student.png' %}">
-			<form action="{% url 'startup_student' %}" method="post" enctype="multipart/form-data">
-				{% csrf_token %}
-				<input required type="file" id="students_file" name="students_file">
-				<input class="btn btn-success mt-4" type="submit" value="Upload">
-			</form>
-		</li>
 		<!--	To update Access Dates and Email Credentials -->
 		<li class="list-group-item">
-			<div>4) Go to root folder of the tathva server. Open 'global.com' folder. Go to /web/gep/gep_project folder and change the settings file. Update the following values. Though it is possible to change these values in between the allotment process, it is not advised to do so.</div>
+			<div>1) Go to root folder of the tathva server. Open 'global.com' folder. Go to /web/gep/gep_project folder and change the settings file. Update the following values. It is possible to change these values in between the allotment process.</div>
 			<ul>
 				<li class="sub-list-group-item"><b>ACADEMIC_DATA_SUBMISSION_START_DATE: </b>It is the date and time to provide access to students to submit academic details. Format: 'yyyy-mm-ddThh:mm:ss' like '2018-04-07T00:00:00'.</li>
 				<li class="sub-list-group-item"><b>ACADEMIC_DATA_SUBMISSION_END_DATE: </b>It is the date and time to close the access of students to submit academic details. Format: 'yyyy-mm-ddThh:mm:ss' like '2018-04-07T00:00:00'.</li>
@@ -89,13 +30,65 @@
 				<li class="sub-list-group-item"><b>EMAIL_HOST_PASSWORD: </b>It is the password of the above mentioned email.</li>
 			</ul>
 		</li>
+		<!--	Upload Department data file	-->
+		<li class="list-group-item">
+			<div>2) Upload Department data file as csv in the following format. Password of each department will be 'DEPARTMENT'. This must be done before academic data submission stage.</div>
+			<img class="mt-2" src="{% static 'gep_app/images/department.png' %}">
+			<form action="{% url 'startup_dept' %}" method="post" enctype="multipart/form-data">
+				{% csrf_token %}
+				<input required type="file" id="department_file" name="departments_file">
+				<input class="btn btn-success mt-4" type="submit" value="Upload Department File">
+			</form>
+		</li>
+		<!--	Upload Faculty data file	-->
+		<li class="list-group-item">
+			<div>3) Upload Faculty data file as csv in the following format. Username of the faculty will be same as their email and password will be 'FACULTY'. This must be done before academic data submission stage.</div>
+			<img class="mt-2" src="{% static 'gep_app/images/faculty.png' %}">
+			<form action="{% url 'startup_faculty' %}" method="post" enctype="multipart/form-data">
+				{% csrf_token %}
+				<input required type="file" id="faculty_file" name="faculties_file">
+				<input class="btn btn-success mt-4" type="submit" value="Upload Faculty File">
+			</form>
+		</li>
+		<!--	Upload Student data file	-->
+		<li class="list-group-item">
+			<div>4) Upload Student data file as csv in the following format. Username and password of each student will be their roll number in block letters. This must be done before academic data submission stage.</div>
+			<img class="mt-2" src="{% static 'gep_app/images/student.png' %}">
+			<form action="{% url 'startup_student' %}" method="post" enctype="multipart/form-data">
+				{% csrf_token %}
+				<input required type="file" id="student_file" name="students_file">
+				<input class="btn btn-success mt-4" type="submit" value="Upload Student File">
+			</form>
+		</li>
 		<!--	To Add Electives  -->
 		<li class="list-group-item">
-			<div>5) Go to the elective section of SAC portal and add details of all global electives. This must be done before providing access to students to submit the elective preference list. If any elective is added after that, then the students have to resubmit their preference list to be eligible for it. If any elective is removed after that, then they will be automatically removed from their preference list.</div>
+			<div>5) Click on the following link to go to the 'Manage elective' section of SAC portal. Add the details of all global electives and also the details of all mutually exclusive electives. This must be done before providing access to students to submit the elective preference list. If any elective is added after that, then the students have to resubmit their preference list to be eligible for it. If any elective is removed after that, then they will be automatically removed from their preference list.</div>
+			<a href="{% url 'sac_view_electives' %}" target="_blank" class="btn btn-success mt-2">Manage Electives</a>
 		</li>
-		<!--	To Add COT Data  -->
+		<!--	Upload COT data file	-->
 		<li class="list-group-item">
-			<div>5) Go to the COT section of SAC portal and add details of students who has acquired COT for courses requiring COT. This must be done before providing access to students to submit the elective preference list.</div>
+			<div>6) Upload COT data file as csv in the following format. Data for all electives in all department should be uploaded together. Data updation must be done before elective preference submission stage.</div>
+			<img class="mt-2" src="{% static 'gep_app/images/cot.png' %}">
+			<form action="{% url 'sac_consent_of_teacher' %}" method="post" enctype="multipart/form-data">
+				{% csrf_token %}
+				<input required type="file" id="cot_file" name="cot_file">
+				<input class="btn btn-success mt-4" type="submit" value="Upload COT File">
+			</form>
+		</li>
+		<!--	Download Academic data	-->
+		<li class="list-group-item">
+			<div>7) Download the academic data submitted by the students from the following link after academic data submission stage.</div>
+			<a class="btn btn-success mt-2" href="{% url 'sac_academic_data' %}">Download Academic Data</a>
+		</li>
+		<!--	Start Global Elective Allotment	-->
+		<li class="list-group-item">
+			<div>8) Click on the following link to start alloting global electives to registered students.</div>
+			<a class="btn btn-success mt-2" href="#">Start Global Elective Allotment</a>
+		</li>
+		<!--	Download Allotment data	-->
+		<li class="list-group-item">
+			<div>9) Download the allotment data from the following link.</div>
+			<a class="btn btn-success mt-2" href="{% url 'sac_allotment_data' %}">Download Allotment Data</a>
 		</li>
 	</ul>
 </div>

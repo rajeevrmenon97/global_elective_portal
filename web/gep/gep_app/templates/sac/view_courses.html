@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block main_content %}
+<div class="container-fluid">
+	<a class="col-sm-12 text-right btn btn-link text-success" href="{% url 'logout' %}">Logout</a>
+	<div class="h2 text-center text-success font-weight-bold">Elective Home</div>
+	<table class="table table-hover">
+		<thead>
+			<th scope="col">Course ID</th>
+			<th scope="col">Name</th>
+			<th scope="col" colspan="3">Department</th>
+		</thead>
+		<tbody>
+			{% for course in courses %}
+			<tr>
+				<td>{{course.course_id}}</td>
+				<td>{{course.name}}</td>
+				<td>{{course.dept.name}}</td>
+				<td>
+					<form action="{% url 'sac_edit_elective' %}" method="post">
+						{% csrf_token %}
+						<input name="course_id" type="hidden" value="{{course.course_id}}">
+						<input class="btn btn-success pl-4 pr-4" type="submit" value="Edit"/>
+					</form>
+				</td>
+				<td>
+					<form action="{% url 'sac_delete_elective' %}" method="post">
+						{% csrf_token %}
+						<input name="course_id" type="hidden" value="{{course.course_id}}">
+						<input class="btn btn-danger" type="submit" value="Delete"/>
+					</form>
+				</td>
+			</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+</div>
+{% endblock %}
