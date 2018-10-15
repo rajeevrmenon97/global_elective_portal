@@ -3,8 +3,30 @@
 
 {% block main_content %}
 <div class="container-fluid">
-	<a class="col-sm-12 text-right btn btn-link text-success" href="{% url 'logout' %}">Logout</a>
-	<div class="h4 col-sm-12 text-center text-success">Alloted Electives</div>
+	<!--	NAVIGATION BAR    -->
+	<nav class="navbar navbar-expand-sm navbar-light mb-3 no-padding-left no-padding-right">
+		<button class="navbar-toggler navbar-toggler-small" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon navbar-toggler-icon-small"></span>
+		</button>
+	  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+		<ul class="navbar-nav mr-auto">
+		  <li class="nav-item active">
+			<a class="nav-link" href="#">Home</a>
+		  </li>
+		  <li class="nav-item">
+			<a class="nav-link" target="_blank" href="{% url 'password_change' %}">Change Password</a>
+		  </li>
+		</ul>
+		<ul class="navbar-nav">
+		  <li class="nav-item">
+			<a class="nav-link" href="{% url 'logout' %}">Logout</a>
+		  </li>
+		</ul>
+	  </div>
+	</nav>
+	
+	<!--    MAIN CONTENT	-->
+	<div class="h4 col-sm-12 text-center">Alloted Global Electives</div>
 		<table class="table table-striped table-hover">
 			<thead>
 			<tr>
@@ -18,11 +40,11 @@
 			<tbody>
 				{% for allotment in allotments %}
 				<tr>
-					<td>{{allotment.elective.course.course_id}}</td>
-					<td>{{allotment.elective.course.name}}</td>
-					<td>{{allotment.elective.course.dept.name}}</td>
-					<td>{{allotment.elective.slot}}</td>
-					<td>{{allotment.elective.faculty.name}}</td>
+					<td>{{ allotment.elective.course.course_id }}</td>
+					<td>{{ allotment.elective.course.name }}</td>
+					<td>{{ allotment.elective.course.dept.name }}</td>
+					<td>{{ allotment.elective.get_slot_display }}</td>
+					<td>{{ allotment.elective.faculty.name|default:"Not Alloted" }}</td>
 				</tr>
 				{% endfor %}
 			</tbody>

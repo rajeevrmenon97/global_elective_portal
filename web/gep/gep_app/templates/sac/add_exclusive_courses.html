@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block main_content %}
+<div class="container-fluid">
+	<!--	NAVIGATION BAR    -->
+	<nav class="navbar navbar-expand-sm navbar-light mb-3 no-padding-left no-padding-right">
+		<button class="navbar-toggler navbar-toggler-small" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon navbar-toggler-icon-small"></span>
+		</button>
+	  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+		<ul class="navbar-nav mr-auto">
+		  <li class="nav-item">
+			<a class="nav-link" href="{% url 'sac_view_courses' %}">View Courses</a>
+		  </li>
+		  <li class="nav-item">
+			<a class="nav-link" href="{% url 'sac_add_course' %}">Add Course</a>
+		  </li>
+		  <li class="nav-item active">
+			<a class="nav-link" href="#">Mutually Exclusive Courses</a>
+		  </li>
+		</ul>
+	  </div>
+	</nav>
+	
+	<!--    MAIN CONTENT	-->
+	<div class="col-12 h2 text-center text-success">Mutually Exclusive Courses</div>
+	
+	<!--	Display error messages (if any)	-->
+	{% if messages %}
+	<ul class="messages">
+		{% for message in messages %}
+			{% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+			<li {% if message.tags %} class="{{ message.tags }} errorlist"{% endif %}>{{ message }}</li>
+			{% endif %}
+		{% endfor %}
+	</ul>
+	{% endif %}
+
+	<table class="table table-hover">
+		<tbody>
+			<!--	Display all mutually exclusive courses	-->
+			{% for exclusive_course_group in exclusive_course_groups %}
+			<tr>
+				<td>
+					<ul>
+						{% for course in exclusive_course_group.courses.all %}
+						<li>{{ course }}</li>
+						{% endfor %}
+					</ul>
+				</td>
+				<td>
+					<form action="{% url 'sac_delete_exclusive_courses' %}" method="post">
+						{% csrf_token %}
+						<input type="hidden" value="{{exclusive_course_group.pk}}" name="exclusive_course_group_id">
+						<input class="btn btn-danger mt-2" type="submit" value="Remove"/>
+					</form>
+				</td>
+			</tr>
+			{% endfor %}
+			
+			<!--	Add new set of mutually exclusive courses		-->
+			<tr>
+			<form action="{% url 'sac_add_exclusive_courses' %}" method="post">
+				{% csrf_token %}
+				<td>
+					{{ form.courses }}{{ form.courses.errors }}
+				</td>
+				<td>
+					<input class="btn btn-success pl-4 pr-4" type="submit" value="Add"/>
+				</td>
+			</form>
+			</tr>
+		</tbody>
+	</table>
+</div>
+
+{% endblock %}

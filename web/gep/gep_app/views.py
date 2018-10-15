@@ -1,27 +1,20 @@
 from django.shortcuts import render, redirect
-from django.http import Http404, JsonResponse, StreamingHttpResponse, HttpResponse
+from django.http import Http404, HttpResponse
 from django.contrib.auth import authenticate, login as auth_login , logout as auth_logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db.models import Q
-from .models import Student, Elective, Course, Faculty, Department, Elective_Preference, COT_Allotment, Elective_Allotment, Elective_Seats
+from django.contrib.auth import get_user_model
+from .models import Student, Elective, Course, Faculty, Department, Elective_Preference, COT_Allotment, Elective_Allotment, Elective_Seats, Mutually_Exclusive_Course_Group
 from django.forms import formset_factory
-from .forms import StudentAcademicsForm, CourseCreationForm, ElectiveCreationForm, ElectiveSeatsCreationForm, UserForm, DepartmentForm, StudentForm, FacultyForm
+from .forms import StudentAcademicsDataForm, CourseForm, ElectiveForm, ElectiveSeatsForm, UserForm, DepartmentForm, StudentForm, FacultyForm, MutuallyExclusiveCourseGroupForm, ElectivePreferenceForm
 from datetime import datetime
 from django.contrib import messages
-from django.contrib.auth import get_user_model
 from django.core import exceptions
 from django.conf import settings
 import csv
-from io import BytesIO
+from io import BytesIO, StringIO
 from zipfile import ZipFile
-
-class Echo:
-    """An object that implements just the write method of the file-like
-    interface.
-    """
-    def write(self, value):
-        """Write the value by returning it, instead of storing in a buffer."""
-        return value
+from .allotment import *
 
 					##########################################
 					#       User Passes Test Functions       #
@@ -46,7 +39,7 @@ def sac_check(user):
 def academic_details_check(user):
 	"""Check if student user has submitted academics details"""
 	student = Student.objects.get(user=user)
-	return student.FA is not None
+	return student.faculty_advisor is not None
 
 def preference_submission_check(user):
 	"""Check if student user has submitted academics details"""
@@ -128,35 +121,62 @@ def home(request):
 #           Helper Functions             #
 ##########################################
 
-def get_eligible_electives(student):
-	""" Return all electives eligible for which the student is eligible ordered by slot and department"""
-	#1) All electives ordered by slot and department
-	electives = Elective.objects.all().order_by('slot', 'course__dept__name')
-	#2) Filter global electives
-	global_electives = electives.filter(~Q(course__dept=student.dept))
-	#3) Filter out electives that were already taken
-	not_taken_electives = global_electives.filter(~Q(course__in=student.past_courses.all()))
-	#4) Filter out electives offered in slots of core courses
-	slot_satisfied_electives = not_taken_electives.filter(~Q(slot__in=student.core_slots))
-	#5) Filter electives with CGPA requirement satisfied
-	cgpa_satisfied_electives = slot_satisfied_electives.filter(course__cgpa_cutoff__lte=student.current_CGPA)
-	#6) Filter electives with COT requirement satisfied
-	cot_satisfied_electives = [elective for elective in cgpa_satisfied_electives if not elective.course.cot_requisite or COT_Allotment.objects.filter(student=student,elective=elective).exists()]
-	return cot_satisfied_electives
+def remove_local_electives(student, electives):
+#	print(electives.filter(~Q(course__dept=student.dept)))
+	return electives.filter(~Q(course__dept=student.dept))
 
-def get_preference_list(student):
-	"""Returns elective preference list submitted by the student along with new electives and after removing removed electives"""
-	#1) All electives submitted by the student
-	elective_ids = Elective_Preference.objects.filter(student=student).order_by('priority_rank').values_list('elective',flat=True)
-	electives = [Elective.objects.get(pk=elective_id) for elective_id in elective_ids]
-	#2) All electives for which student is eligible
-	eligible_electives = get_eligible_electives(student)
-	#3) Add recently added electives in the end
-	recently_added_electives = list(set(eligible_electives) - set(electives))
-	electives.extend(recently_added_electives)
-	#4) Remove recently removed electives
-	recently_removed_electives = list(set(electives) - set(eligible_electives))
-	return [elective for elective in electives if elective not in recently_removed_electives]
+#def remove_taken_electives(student, electives):
+#	return electives.filter(~Q(course__in=student.past_courses.all()))
+
+def remove_electives_of_core_slots(student, electives):
+#	print(electives.filter(~Q(slot__in=student.core_slots)))
+	return electives.filter(~Q(slot__in=student.core_slots))
+
+def remove_electives_with_insufficient_cgpa(student, electives):
+#	print(electives.filter(course__cgpa_cutoff__lte=student.current_cgpa))
+	return electives.filter(course__cgpa_cutoff__lte=student.current_cgpa)
+
+def remove_taken_electives_and_mutually_exclusive_electives_of_taken_electives(student, electives):
+	exclusive_course_groups = Mutually_Exclusive_Course_Group.objects.all()
+	for course in student.past_courses.all():
+		for exclusive_course_group in exclusive_course_groups:
+			if course in exclusive_course_group.courses.all():
+				electives = electives.filter(~Q(course__in=exclusive_course_group.courses.all()))
+			else:
+				electives = electives.filter(~Q(course=course))
+#	print(electives)
+	return electives
+
+def remove_electives_with_cot_not_acquired(student, electives):
+	for elective in electives:
+		cot_requisite = COT_Allotment.objects.filter(student=student,elective=elective).exists()
+		electives = electives.filter(course__cot_requisite=cot_requisite)
+#	print(electives)
+	return electives
+
+def get_sorted_eligible_electives(student):
+	electives = Elective.objects.all().order_by('slot', 'course__dept__name')
+	return remove_electives_with_cot_not_acquired(student, remove_electives_with_insufficient_cgpa(student, remove_taken_electives_and_mutually_exclusive_electives_of_taken_electives(student, remove_electives_of_core_slots(student, remove_local_electives(student, electives)))))
+
+def get_sorted_submitted_electives(student):
+	sorted_submitted_elective_ids = Elective_Preference.objects.filter(student=student).order_by('priority_rank').values_list('elective',flat=True)
+	return [Elective.objects.get(pk=elective_id) for elective_id in sorted_submitted_elective_ids]
+
+def get_queryset_difference(first_queryset,second_queryset):
+	return list(set(first_queryset) - set(second_queryset))
+
+def get_updated_and_priority_sorted_elective_list(student):
+	sorted_submitted_electives = get_sorted_submitted_electives(student)
+#	print(sorted_submitted_electives)
+	sorted_eligible_electives = get_sorted_eligible_electives(student)
+#	print(sorted_eligible_electives)
+	recently_added_electives = get_queryset_difference(sorted_eligible_electives,sorted_submitted_electives)
+#	print(recently_added_electives)
+	recently_removed_electives = get_queryset_difference(sorted_submitted_electives,sorted_eligible_electives)
+#	print(recently_removed_electives)
+	
+	sorted_submitted_electives.extend(recently_added_electives)
+	return [elective for elective in sorted_submitted_electives if elective not in recently_removed_electives]
 
 ##########################################
 #             Student Home               #
@@ -179,23 +199,22 @@ def student_home(request):
 @login_required
 @user_passes_test(student_check)
 def student_academic_data_submission(request):
-	"""Submits the details for FA verification"""
 	user = request.user
 	student = Student.objects.get(user=user)
 	
 	if request.method == 'POST':
-		form = StudentAcademicsForm(request.POST, instance=student)
+		form = StudentAcademicsDataForm(request.POST, instance=student)
 		if form.is_valid():
 			form.save()
 			
 	else:
-		form = StudentAcademicsForm(instance=student)
+		form = StudentAcademicsDataForm(instance=student)
 		
 	context = {
 		'roll_number':user.username,
 		'name': student.name,
 		'form':form,
-		'is_submitted':academic_details_check(student),
+		'has_submitted':academic_details_check(student),
 	}
 	
 	return render(request, 'student/home.html', context)
@@ -205,8 +224,7 @@ def student_academic_data_submission(request):
 ###################################################
 @login_required
 @user_passes_test(student_check)
-def student_test_failure(request):
-	"""Renders error page for the students who has not completed the previous stages"""
+def student_incomplete_previous_stage(request):
 	return render(request, 'student/test_failure.html')
 
 #############################################
@@ -214,14 +232,15 @@ def student_test_failure(request):
 #############################################
 @login_required
 @user_passes_test(student_check)
-@user_passes_test(academic_details_check, login_url='student_test_failure')
+@user_passes_test(academic_details_check, login_url='student_incomplete_previous_stage')
 def student_preference_submission(request):
-	"""Submits the elective preference list of the student"""
 	user = request.user
 	student = Student.objects.get(user=user)
 	
 	if request.method == 'POST':
-		elective_ids = Elective.objects.all().values_list('id',flat=True)
+		Elective_Preference.objects.filter(student=student).delete()
+		student.submission_datetime = None
+		student.save()
 		
 		for key, value in request.POST.items():
 			#Skip csrf token
@@ -230,18 +249,30 @@ def student_preference_submission(request):
 			except ValueError:
 				continue
 				
-			#Save priority rank of valid elective_ids
-			if elective_id in elective_ids:
-				allotment,is_created = Elective_Preference.objects.get_or_create(student=student, elective_id=elective_id)
-				allotment.priority_rank = value
-				allotment.save()
+			elective_preference_data = {
+				'student':student,
+				'elective':elective_id,
+				'priority_rank':value
+			}
+				
+			try:
+				elective_preference = Elective_Preference.objects.get(student=student,elective=elective_id)
+				form = ElectivePreferenceForm(elective_preference_data,instance=elective_preference)
+			except exceptions.ObjectDoesNotExist:
+				form = ElectivePreferenceForm(elective_preference_data)
+			
+			if form.is_valid():
+				form.save()
+			else:
+				raise Http404
+				
 		student.submission_datetime = datetime.now()
 		student.save()
 				
-	electives = get_preference_list(student)
+	electives = get_updated_and_priority_sorted_elective_list(student)
 	context = {
 		'electives':electives,
-		'is_submitted':preference_submission_check(student),
+		'has_submitted':preference_submission_check(student),
 	}
 	
 	return render(request, 'student/preference_submission.html', context)
@@ -252,8 +283,8 @@ def student_preference_submission(request):
 #############################################
 @login_required
 @user_passes_test(student_check)
-@user_passes_test(academic_details_check, login_url='student_test_failure')
-@user_passes_test(preference_submission_check, login_url='student_test_failure')
+@user_passes_test(academic_details_check, login_url='student_incomplete_previous_stage')
+@user_passes_test(preference_submission_check, login_url='student_incomplete_previous_stage')
 def student_allotment_publication(request):
 	"""Displays the elective alloted to the student"""
 	user = request.user
@@ -275,45 +306,34 @@ def student_allotment_publication(request):
 #           Helper Functions             #
 ##########################################
 
-def get_data_from_csv(request,return_view,csv_file_name):
-	"""Retrieve the file with the given file name from the request, decode it and return, If error redirect to the given return view"""
+def get_uploaded_file(request,csv_file_name):
 	try:
 		csv_file = request.FILES[csv_file_name]
-		
-		#if file is not CSV, return
-		if not csv_file.name.endswith('.csv'):
-			messages.error(request,'File is not CSV type')
-			return redirect(return_view)
-		
-        #if file is too large, return
-		if csv_file.multiple_chunks():
-			messages.error(request,"Uploaded file is too big (%.2f MB)." % (csv_file.size/(1000*1000),))
-			return redirect(return_view)
-		
-		file_data = csv_file.read().decode("utf-8")
-		return file_data
-		
+		return csv_file
 	except Exception as e:
 		messages.error(request,"Unable to upload file. " + repr(e))
-		return redirect(return_view)
+		return None	
+		
+def convert_csv_to_data(csv_file):		
+	if not csv_file.name.endswith('.csv'):
+		messages.error(request,'File is not CSV type')
+		return None
 
-def add_error_messages_to_request(request,form,line_number):
-	""" Add error messages in the given form to given request for the given line number """
+	if csv_file.multiple_chunks():
+		messages.error(request,"Uploaded file is too big (%.2f MB)." % (csv_file.size/(1000*1000),))
+		return None
+
+	file_data = csv_file.read().decode("utf-8")
+	return file_data
+
+def convert_form_errors_to_string(form):
 	errorlist = form.errors
 	for field,errors in errorlist.items():
 		for error in errors:
-			messages.error(request,'In line %d %s: %s' %(line_number, field, error))
-			
-
-def convert_form_errors(form):
-	""" Convert form errors to string"""
-	errorlist = form.errors
-	for field,errors in errorlist.items():
-		for error in errors:
-			return 'Error in %s: %s' %(field, error)
+			return 'Error: %s' %(error)
 	
 ##########################################
-#              Startup Page              #
+#              Home Page              #
 ##########################################
 
 @login_required
@@ -327,52 +347,58 @@ def sac_home(request):
 
 @login_required
 @user_passes_test(sac_check)
-def startup_dept(request):
-	""" Uploads Department data to database """
+def sac_dept(request):
 	if request.method == 'POST':
 		if pre_academic_data_submission_stage_check():
-			# Clear Complete Database
 			Student.objects.all().delete()
 			Faculty.objects.all().delete()
 			Department.objects.all().delete()
 			get_user_model().objects.filter(~Q(role=get_user_model().SAC)).delete()
 
-			# Get the department data from uploaded CSV
-			departments_data = get_data_from_csv(request,'sac_home','department_file')
-
-			lines = departments_data.split("\n")[1:]
+			uploaded_file = get_uploaded_file(request,'department_file')
+			if uploaded_file is None:
+				return redirect('sac_home')
+			
+			department_data = convert_csv_to_data(uploaded_file)
+			if department_data is None:	
+				return redirect('sac_home')
+						
+			lines = department_data.split("\n")[1:]
 			for index, line in enumerate(lines):
 				fields = line.split(",")
-				username = fields[0].strip()
-				name = fields[1].strip()
-				email = fields[2].strip()
+				try:
+					username = fields[0].strip() #Extra \n and \r may be introduced during csv conversion
+					name = fields[1].strip()
+					email = fields[2].strip()
+				except IndexError:
+					messages.error(request, 'Line ' + str(index+1) + ' insufficient number of fields')
+					break
 
-				# Create user for department
 				user_dict = {
 					'username': username,
 					'email': email,
 					'role': get_user_model().DEPARTMENT,
 				}
 				user_form = UserForm(user_dict)
+				
 				if user_form.is_valid():
-					user = form.save()
-					# Set default password
-					user.set_password('DEPTARTMENT')
+					user = user_form.save()
+					user.set_password('DEPTARTMENT') #Default password
 					user.save()
 
-					# Create department
 					dept_dict = {
 						'user':user.username,
 						'name':name,
 					}
 					dept_form = DepartmentForm(dept_dict)
+					
 					if dept_form.is_valid():
 						dept_form.save()			
 					else:
-						messages.error(request, 'Line ' + str(index+1) + convert_form_errors(dept_form))
+						messages.error(request, 'Line ' + str(index+1) + ' ' + convert_form_errors_to_string(dept_form))
 						break
 				else:
-					messages.error(request, 'Line ' + str(index+1) + convert_form_errors(user_form))
+					messages.error(request, 'Line ' + str(index+1) + ' ' + convert_form_errors_to_string(user_form))
 					break
 		else:
 			messages.error(request, 'This data can be updated only before academic data submission stage')
@@ -385,54 +411,60 @@ def startup_dept(request):
 
 @login_required
 @user_passes_test(sac_check)
-def startup_faculty(request):
-	""" Uploads Faculty data to database """
+def sac_faculty(request):
 	if request.method == 'POST':
 		if pre_academic_data_submission_stage_check():
-			# Clear the Student and Faculty Database
 			Student.objects.all().delete()
 			Faculty.objects.all().delete()
 			get_user_model().objects.filter(role=get_user_model().FACULTY).delete()
 			get_user_model().objects.filter(role=get_user_model().STUDENT).delete()
 
-			# Get the faculty data from uploaded CSV
-			faculties_data = get_data_from_csv(request,'sac_home','faculty_file')
-
-			lines = faculties_data.split("\n")[1:]
+			uploaded_file = get_uploaded_file(request,'faculty_file')
+			if uploaded_file is None:
+				return redirect('sac_home')
+			
+			faculty_data = convert_csv_to_data(uploaded_file)
+			if faculty_data is None:	
+				return redirect('sac_home')
+						
+			lines = faculty_data.split("\n")[1:]
 			for index, line in enumerate(lines):
 				fields = line.split(",")
-				username = fields[0].strip()
-				name = fields[1].strip()
-				email = fields[2].strip()
-				dept = fields[3].strip()
+				try:
+					username = fields[0].strip() #Extra \n and \r may be introduced during csv conversion
+					name = fields[1].strip()
+					email = fields[2].strip()
+					dept = fields[3].strip()
+				except IndexError:
+					messages.error(request, 'Line ' + str(index+1) + ' insufficient number of fields')
+					break
 
-				# Create user for faculty
 				user_dict = {
 					'username': username,
 					'email': email,
 					'role': get_user_model().FACULTY,
 				}
 				user_form = UserForm(user_dict)
+				
 				if user_form.is_valid():
 					user = user_form.save()
-					# Set default password
-					user.set_password('FACULTY')
+					user.set_password('FACULTY') #Default password
 					user.save()
 
-					# Create student
 					faculty_dict = {
 						'user':user.username,
 						'name':name,
 						'dept':dept,
 					}
 					faculty_form = FacultyForm(faculty_dict)
+					
 					if faculty_form.is_valid():
 						faculty_form.save()			
 					else:
-						messages.error(request, 'Line ' + str(index+1) + convert_form_errors(faculty_form))
+						messages.error(request, 'Line ' + str(index+1) + ' ' + convert_form_errors_to_string(faculty_form))
 						break
 				else:
-					messages.error(request, 'Line ' + str(index+1) + convert_form_errors(user_form))
+					messages.error(request, 'Line ' + str(index+1) + ' ' + convert_form_errors_to_string(user_form))
 					break
 		else:
 			messages.error(request, 'This data can be updated only before academic data submission stage')
@@ -446,40 +478,46 @@ def startup_faculty(request):
 
 @login_required
 @user_passes_test(sac_check)
-def startup_student(request):
+def sac_student(request):
 	""" Uploads Student data to database """
 	if request.method == 'POST':
 		if pre_academic_data_submission_stage_check():
-			# Clear the Student Database
 			Student.objects.all().delete()
 			get_user_model().objects.filter(role=get_user_model().STUDENT).delete()
 
-			# Get the student data from uploaded CSV
-			students_data = get_data_from_csv(request,'sac_home','student_file')
-
-			lines = students_data.split("\n")[1:]
+			uploaded_file = get_uploaded_file(request,'student_file')
+			if uploaded_file is None:
+				return redirect('sac_home')
+			
+			student_data = convert_csv_to_data(uploaded_file)
+			if student_data is None:	
+				return redirect('sac_home')
+						
+			lines = student_data.split("\n")[1:]
 			for index, line in enumerate(lines):
 				fields = line.split(",")
-				username = fields[0].strip()
-				name = fields[1].strip()
-				email = fields[2].strip()
-				date_of_birth = fields[3].strip()
-				dept = fields[4].strip()
+				try:
+					username = fields[0].strip() #Extra \n and \r may be introduced during csv conversion
+					name = fields[1].strip()
+					email = fields[2].strip()
+					date_of_birth = fields[3].strip()
+					dept = fields[4].strip()
+				except IndexError:
+					messages.error(request, 'Line ' + str(index+1) + ' insufficient number of fields')
+					break
 
-				# Create user for student
 				user_dict = {
 					'username': username,
 					'email': email,
 					'role': get_user_model().STUDENT,
 				}
 				user_form = UserForm(user_dict)
+				
 				if user_form.is_valid():
 					user = user_form.save()
-					# Set default password
-					user.set_password(user.username)
+					user.set_password(user.username) #Default password
 					user.save()
 
-					# Create student
 					student_dict = {
 						'user':user.username,
 						'name':name,
@@ -487,13 +525,14 @@ def startup_student(request):
 						'dept':dept,
 					}
 					student_form = StudentForm(student_dict)
+					
 					if student_form.is_valid():
 						student_form.save()			
 					else:
-						messages.error(request, 'Line ' + str(index+1) + convert_form_errors(student_form))
+						messages.error(request, 'Line ' + str(index+1) + ' ' + convert_form_errors_to_string(student_form))
 						break
 				else:
-					messages.error(request, 'Line ' + str(index+1) + convert_form_errors(user_form))
+					messages.error(request, 'Line ' + str(index+1) + ' ' + convert_form_errors_to_string(user_form))
 					break
 		else:
 			messages.error(request, 'This data can be updated only before academic data submission stage')
@@ -506,40 +545,46 @@ def startup_student(request):
 
 @login_required
 @user_passes_test(sac_check)
-def sac_consent_of_teacher(request):
-	""" Uploads COT data to database """
+def sac_cot(request):
 	if request.method == 'POST':
 		if pre_preference_submission_stage_check():
-			# Clear the Database
 			COT_Allotment.objects.all().delete()
 
-			# Get the COT data from uploaded CSV
-			cot_data = get_data_from_csv(request,'sac_home','cot_file')
+			uploaded_file = get_uploaded_file(request,'cot_file')
+			if uploaded_file is None:
+				return redirect('sac_home')
+			
+			cot_data = convert_csv_to_data(uploaded_file)
+			if cot_data is None:	
+				return redirect('sac_home')
 
 			lines = cot_data.split("\n")[1:]
 			for index, line in enumerate(lines):
 				fields = line.split(",")
-				course = fields[0].strip()
-				slot = fields[1].strip()
-				student = fields[2].strip()
+				try:
+					course = fields[0].strip() #Extra \n and \r may be introduced during csv conversion
+					slot = fields[1].strip()
+					student = fields[2].strip()
+				except IndexError:
+					messages.error(request, 'Line ' + str(index+1) + ' insufficient number of fields')
+					break
 
 				try:
 					elective = Elective.objects.get(course=course,slot=slot)
-
-					# Create COT allotment
-					cot_dict = {
-						'elective': elective,
-						'student': student,
-					}
-					cot_allotment_form = COTAllotmentForm(cot_dict)
-
-					if cot_allotment_form.is_valid():
-						cot_allotment_form.save()				
-					else:
-						messages.error(request, 'Line ' + str(index+1) + convert_form_errors(cot_allotment_form))
-						break
-				except:
+				except exceptions.ObjectDoesNotExist:
 					messages.error(request, 'Invalid course or slot in line ' + str(index+1))
+					break
+				
+				cot_dict = {
+					'elective': elective,
+					'student': student,
+				}
+				cot_allotment_form = COTAllotmentForm(cot_dict)
+
+				if cot_allotment_form.is_valid():
+					cot_allotment_form.save()				
+				else:
+					messages.error(request, 'Line ' + str(index+1) + convert_form_errors_to_string(cot_allotment_form))
 					break
 
 		else:
@@ -554,45 +599,51 @@ def sac_consent_of_teacher(request):
 @login_required
 @user_passes_test(sac_check)
 def sac_academic_data(request):
-	""" Download Student's academic data as a zip file of csv files, one csv file per department """
-	# Create a buffer to store the zip file
-	in_memory = BytesIO()
+	buffer_for_zip = BytesIO()
+	zip = ZipFile(buffer_for_zip, "w")       
 	
-	# Create a zip file
-	zip = ZipFile(in_memory, "w")       
-	
-	# Create a csv file for each department containing academic data of students of that department
 	depts = Department.objects.all().order_by('name')
 	for dept in depts:
-		# Create a buffer for csv file
-		pseudo_buffer = Echo()
-		writer = csv.writer(pseudo_buffer)
+		buffer_for_submitted_students_csv = StringIO()
+		writer_for_submitted_students = csv.writer(buffer_for_submitted_students_csv)
 		
-		# Write the titles into the csv as first row
-		title_row = ['Faculty Advisor','Next Semester','Current CGPA']
-		data = writer.writerow(title_row)
+		buffer_for_not_submitted_students_csv = StringIO()
+		writer_for_not_submitted_students = csv.writer(buffer_for_not_submitted_students_csv)
 		
-		# Write the academic data of each student into the csv
-		students = Student.objects.filter(dept=dept).order_by('FA','next_semester','name')
+		title_row = ['Roll Number','Name','Faculty Advisor','Next Semester','Current CGPA','Number of global electives','Past Courses','Core slots']
+		writer_for_submitted_students.writerow(title_row)
+		
+		title_row = ['Roll Number','Name']
+		writer_for_not_submitted_students.writerow(title_row)
+		
+		students = Student.objects.filter(dept=dept).order_by('faculty_advisor','next_semester','name')
 		for student in students:
-			row = [student.FA.name, student.next_semester , student.current_CGPA]
-			data = writer.writerow(row)
+			if academic_details_check(student.user):
+				past_courses = ''
+				for course in student.past_courses.all():
+					past_courses = past_courses + course.name + ', '
+				core_slots = ''
+				for slot in student.core_slots:
+					core_slots = core_slots + slot + ', '
+				row = [student.user.username, student.name, student.faculty_advisor.name, student.next_semester , student.current_cgpa, student.required_elective_count, past_courses, core_slots]
+				writer_for_submitted_students.writerow(row)
+			else:
+				row = [student.user.username, student.name]
+				writer_for_not_submitted_students.writerow(row)
 		
-		# Write the file into the zip file with the name of the file as the department name
-		zip.writestr("%s.csv" %(dept.name) ,data)
+		zip.writestr("%s-submitted.csv" %(dept.name), buffer_for_submitted_students_csv.getvalue())
+		zip.writestr("%s-not-submitted.csv" %(dept.name), buffer_for_not_submitted_students_csv.getvalue())
 
 	# Fix for Linux zip files read in Windows
 	for file in zip.filelist:
 		file.create_system = 0 
 
-	# Close the zip file
 	zip.close()
 
-	# Return the zip file as a HttpResponse
 	response = HttpResponse(content_type="application/zip")
 	response["Content-Disposition"] = "attachment; filename=AcademicData.zip"
-	in_memory.seek(0)    
-	response.write(in_memory.read())
+	buffer_for_zip.seek(0)    
+	response.write(buffer_for_zip.read())
 	return response
 
 ##########################################
@@ -602,25 +653,30 @@ def sac_academic_data(request):
 @login_required
 @user_passes_test(sac_check)
 def sac_allotment_data(request):
-	""" Download Allotment data as a csv file """
-	# Create a buffer for csv file
-	pseudo_buffer = Echo()
-	writer = csv.writer(pseudo_buffer)
+	response = HttpResponse(content_type='text/csv')
+	response['Content-Disposition'] = 'attachment; filename="Allotment.csv"'
 	
-	# Write the titles into the csv as first row
+	writer = csv.writer(response)
+	
 	title_row = ['Course ID','Course Name','Slot','Roll Number','Student Name', 'Semester']
-	data = writer.writerow(title_row)
+	writer.writerow(title_row)
 	
-	# Write the allotment data of all students to the csv file
 	allotments = Elective_Allotment.objects.all().order_by('elective__course__dept','elective__course__name','elective__slot','student__next_semester','student__name')
 	for allotment in allotments:
-		row = [allotment.elective.course.course_id, allotment.elective.course.name, allotment.elective.slot, allotment.student.user.username, allotment.student.name, allotment.student.next_semester]
-		data = writer.writerow(row)
+		row = [allotment.elective.course.course_id, allotment.elective.course.name, allotment.elective.get_slot_display(), allotment.student.user.username, allotment.student.name, allotment.student.get_next_semester_display()]
+		writer.writerow(row)
 	
-	# Return the csv file as a HttpResponse
-	response = StreamingHttpResponse(data, content_type="text/csv")
-	response['Content-Disposition'] = 'attachment; filename="allotment.csv"'
 	return response
+	
+##########################################
+#     Start Global Elective Allotment    #
+##########################################
+
+@login_required
+@user_passes_test(sac_check)
+def sac_start_allotment(request):
+	start_global_elective_allotment()	
+	return redirect('sac_home')
 
 ##########################################
 #            Manage Electives            #
@@ -632,12 +688,12 @@ def sac_allotment_data(request):
 
 @login_required
 @user_passes_test(sac_check)
-def sac_view_electives(request):
+def sac_view_courses(request):
 	courses = Course.objects.all().order_by('dept__name','name')
 	context = {
 		'courses':courses,
 	}
-	return render(request, 'sac/view_electives.html', context)
+	return render(request, 'sac/view_courses.html', context)
 
 ##########################################
 #               Add Course               #
@@ -645,27 +701,27 @@ def sac_view_electives(request):
 
 @login_required
 @user_passes_test(sac_check)
-def sac_add_elective(request):	
+def sac_add_course(request):	
 	if request.method == 'POST':
 		try:
 			course_id = request.POST.get('course_id')
 			course = Course.objects.get(course_id=course_id)
-			form = CourseCreationForm(request.POST,instance=course)
+			form = CourseForm(request.POST,instance=course)
 		except:
-			form = CourseCreationForm(request.POST)
+			form = CourseForm(request.POST)
 			
 		if form.is_valid():
 			course = form.save()
 			request.session['course_id'] = course.course_id
-			return redirect('sac_view_elective_slots')
+			return redirect('sac_view_electives_of_course')
 	else:
-		form = CourseCreationForm()
+		form = CourseForm()
 		
 	context = {
 		'form':form,
 	}
 	
-	return render(request, 'sac/add_elective.html', context)
+	return render(request, 'sac/add_course.html', context)
 
 ##########################################
 #              Edit Course               #
@@ -673,19 +729,20 @@ def sac_add_elective(request):
 
 @login_required
 @user_passes_test(sac_check)
-def sac_edit_elective(request):
+def sac_edit_course(request):
 	if request.method == 'POST':
 		try:
 			course_id = request.POST.get('course_id')
 			course = Course.objects.get(course_id=course_id)
-			form = CourseCreationForm(instance=course)
-
-			context = {
-				'form':form,
-			}
-			return render(request, 'sac/add_elective.html', context)
 		except:
-			pass
+			raise Http404
+			
+		form = CourseForm(instance=course)
+		context = {
+			'form':form,
+		}
+		
+		return render(request, 'sac/add_course.html', context)
 		
 	raise Http404
 
@@ -695,14 +752,15 @@ def sac_edit_elective(request):
 	
 @login_required
 @user_passes_test(sac_check)
-def sac_delete_elective(request):
+def sac_delete_course(request):
 	if request.method == 'POST':
 		try:
 			course_id = request.POST.get('course_id')
 			Course.objects.get(course_id=course_id).delete()
-			return redirect('sac_view_electives')
 		except:
-			pass
+			raise Http404
+		
+		return redirect('sac_view_courses')
 	
 	raise Http404
 
@@ -712,35 +770,32 @@ def sac_delete_elective(request):
 
 @login_required
 @user_passes_test(sac_check)
-def sac_view_elective_slots(request):
+def sac_view_electives_of_course(request):
 	try:
-		#Get course
 		course_id = request.session.get('course_id')
-		course = Course.objects.get(course_id=course_id)			
-		#Get electives
-		electives = Elective.objects.filter(course=course)
-		#Get elective seats
-		elective_seats = Elective_Seats.objects.filter(elective__course=course).order_by('dept__name')
-
-		#Create form for electives
-		elective_form = ElectiveCreationForm(initial={course:course})
-		#Create formset for Elective Seats of each department
-		depts = Department.objects.all().order_by('name')
-		ElectiveSeatsCreationFormSet = formset_factory(ElectiveSeatsCreationForm, extra=0)
-		elective_seats_formset = ElectiveSeatsCreationFormSet(initial=[{'dept_name': dept.name} for dept in depts])
-
-		context = {
-			'course':course,
-			'electives':electives,
-			'elective_seats':elective_seats,
-			'elective_form':elective_form,
-			'elective_seats_formset':elective_seats_formset,
-		}
-
-		return render(request,'sac/add_elective_slots.html',context)
-
+		course = Course.objects.get(course_id=course_id)
 	except:
 		raise Http404
+		
+	depts = Department.objects.all().order_by('name')
+	electives = Elective.objects.filter(course=course).order_by('slot')
+	elective_seats = Elective_Seats.objects.filter(elective__course=course).order_by('elective__slot','dept__name')
+
+	elective_form = ElectiveForm(initial={course:course})
+	ElectiveSeatsFormSet = formset_factory(ElectiveSeatsForm, extra=0)
+	elective_seats_formset = ElectiveSeatsFormSet(initial=[{'dept': dept} for dept in depts])
+
+	context = {
+		'depts':depts,
+		'course':course,
+		'electives':electives,
+		'elective_seats':elective_seats,
+		'elective_form':elective_form,
+		'elective_seats_formset':elective_seats_formset,
+	}
+
+	return render(request,'sac/add_electives_of_course.html',context)
+
 
 ##########################################
 #        Add Elective of a Course        #
@@ -748,66 +803,108 @@ def sac_view_elective_slots(request):
 
 @login_required
 @user_passes_test(sac_check)
-def sac_add_elective_slot(request):
+def sac_add_elective_of_course(request):
 	if request.method == 'POST':
 		try:
-			#Check course has been modified
-			saved_course_id = request.session.get('course_id')
-			course_id = request.POST.get('course_id')
-			
-			if saved_course_id == course_id:
-				elective_form = ElectiveCreationForm(request.POST)
-				depts = Department.objects.all().order_by('name')
-				ElectiveSeatsCreationFormSet = formset_factory(ElectiveSeatsCreationForm, extra=0)
-				elective_seats_formset = ElectiveSeatsCreationFormSet(request.POST)
-
-				if elective_form.is_valid():
-					if elective_seats_formset.is_valid():
-							elective = elective_form.save()
-							for elective_seat_form in elective_seats_formset:
-								elective_seat_form.save(elective)
-					else:
-						messages.error(request, 'Invalid number of seats')
-				else:
-					messages.error(request,convert_form_errors(elective_form))
-			else:
-				messages.error(request, 'Incorrect course')
+			course_id = request.POST.get('course')
+			course = Course.objects.get(course_id=course_id)
 		except:
 			raise Http404
-	else:
-		raise Http404
 			
-	return redirect('sac_view_elective_slots')
+		#Check course id was modified in browser
+		saved_course_id = request.session.get('course_id')
+		if saved_course_id == course_id:
+			elective_form = ElectiveForm(request.POST)
+			depts = Department.objects.all().order_by('name')
+			ElectiveSeatsFormSet = formset_factory(ElectiveSeatsForm, extra=0)
+			elective_seats_formset = ElectiveSeatsFormSet(request.POST)
 
+			if elective_form.is_valid():
+				if elective_seats_formset.is_valid():
+					elective = elective_form.save()
+					for elective_seat_form in elective_seats_formset:
+						elective_seat_form.save(elective)
+				else:
+					for elective_seat_form in elective_seats_formset:
+						messages.error(request, convert_form_errors_to_string(elective_seat_form))
+			else:
+				messages.error(request, convert_form_errors_to_string(elective_form))
+		else:
+			messages.error(request, 'Incorrect course')
+			
+		return redirect('sac_view_electives_of_course')
+	
+	raise Http404
+			
 ##########################################
 #       Delete Elective of a Course      #
 ##########################################
 	
 @login_required
 @user_passes_test(sac_check)
-def sac_delete_elective_slot(request):
+def sac_delete_elective_of_course(request):
 	if request.method == 'POST':
 		try:
-			#Get course
 			course_id = request.POST.get('course_id')
 			course = Course.objects.get(course_id=course_id)
-			
-			#Check course has been modified
-			saved_course_id = request.session.get('course_id')
-			if saved_course_id == course_id:
-				try:
-					slot = request.POST.get('slot')
-					Elective.objects.get(course=course,slot=slot).delete()
-				except:
-					messages.error(request, 'Invalid slot')
-			else:
-				messages.error(request, 'Incorrect course')
 		except:
 			raise Http404
-	else:
-		raise Http404
+			
+		#Check course id was modified in browser
+		saved_course_id = request.session.get('course_id')
+		if saved_course_id == course_id:
+			try:
+				slot = request.POST.get('slot')
+				Elective.objects.get(course=course,slot=slot).delete()
+			except:
+				messages.error(request, 'Invalid slot')
+		else:
+			messages.error(request, 'Incorrect course')
+			
+		return redirect('sac_view_electives_of_course')
+	
+	raise Http404
 		
-	return redirect('sac_view_elective_slots')
+##########################################
+#      Add Mutually Exclusive Courses    #
+##########################################
+
+@login_required
+@user_passes_test(sac_check)
+def sac_add_exclusive_courses(request):
+	exclusive_course_groups = Mutually_Exclusive_Course_Group.objects.all()
+	
+	if request.method == 'POST':
+		form = MutuallyExclusiveCourseGroupForm(request.POST)
+		if form.is_valid():
+			form.save()
+	else:
+		form = MutuallyExclusiveCourseGroupForm()
+	
+	context = {
+		'exclusive_course_groups':exclusive_course_groups,
+		'form':form,
+	}
+
+	return render(request, 'sac/add_exclusive_courses.html', context)
+	
+##########################################
+#    Delete Mutually Exclusive Courses   #
+##########################################
+
+@login_required
+@user_passes_test(sac_check)
+def sac_delete_exclusive_courses(request):
+	if request.method == 'POST':
+		try:
+			exclusive_course_group_id = request.POST.get('exclusive_course_group_id')
+			Mutually_Exclusive_Course_Group.objects.get(id=exclusive_course_group_id).delete()
+		except:
+			messages.error(request, 'Invalid mutually exclusive courses')
+		
+		return redirect('sac_add_exclusive_courses')
+	
+	raise Http404
 
 						##########################################
 						#             Faculty Portal             #

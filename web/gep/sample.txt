@@ -3,6 +3,9 @@ from gep_app import allotment
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 
+allotment.start_global_elective_allotment()
+Elective_Allotment.objects.all()
+
 Student.objects.all().delete()
 Department.objects.all().delete()
 get_user_model().objects.filter().delete()

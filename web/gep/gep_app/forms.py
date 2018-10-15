@@ -2,66 +2,55 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext as _
 from django.db.models import Q
-from .models import Student, Course, Elective, Elective_Seats, Faculty, Department
 from django.contrib.auth import get_user_model
+from .models import Student, Faculty, Department, Course, Elective, Elective_Seats, Mutually_Exclusive_Course_Group, Elective_Preference
 
 class UserForm(forms.ModelForm):
-	"""Form for User"""
 	class Meta:
 		model = get_user_model()
 		fields = ['username','password','email','role']
 
 	def clean_email(self):
-		"""Raise validation error if email is empty"""
 		email = self.cleaned_data.get('email')
 		if email is None:
 			raise ValidationError(_('This field is required'), code='empty')
 		return email
  
 	def clean_role(self):
-		"""Raise validation error if role is empty"""
 		role = self.cleaned_data.get('role')
 		if role is None:
 			raise ValidationError(_('This field is required'), code='empty')
 		return role
 	
 class DepartmentForm(forms.ModelForm):
-	"""Form for Department"""
 	class Meta:
 		model = Department
 		fields = ['user','name']
 
 class StudentForm(forms.ModelForm):
-	"""Form for Student"""
 	class Meta:
 		model = Student
 		fields = ['user','name','date_of_birth','dept']
 
 class FacultyForm(forms.ModelForm):
-	"""Form for Faculty"""
 	class Meta:
 		model = Faculty	
 		fields = ['user','name','dept']
 
-class StudentAcademicsForm(forms.ModelForm):
-	"""Form for the details submitted for FA validation"""
+class StudentAcademicsDataForm(forms.ModelForm):
 	class Meta:
 		model = Student
-		fields = ['FA','current_CGPA','next_semester','required_elective_count','core_slots','past_courses']
+		fields = ['faculty_advisor','current_cgpa','next_semester','required_elective_count','core_slots','past_courses']
 
 	def __init__(self, *args, **kwargs):
-		super(StudentAcademicsForm, self).__init__(*args, **kwargs)
+		super(StudentAcademicsDataForm, self).__init__(*args, **kwargs)
 		
-		if self.instance and self.instance.dept:
-			self.fields['FA'].queryset = Faculty.objects.filter(dept=self.instance.dept).order_by('name')
-		else:
-			self.fields['FA'].queryset = Faculty.objects.all().order_by('name')
-
-		self.fields['FA'].widget.attrs.update({
+		self.fields['faculty_advisor'].queryset = Faculty.objects.filter(dept=self.instance.dept).order_by('name')
+		self.fields['faculty_advisor'].widget.attrs.update({
 				'class': 'form-control',
 			})
 		
-		self.fields['current_CGPA'].widget.attrs.update({
+		self.fields['current_cgpa'].widget.attrs.update({
 				'placeholder': 'CGPA',
 				'class': 'form-control',
 			})
@@ -76,10 +65,7 @@ class StudentAcademicsForm(forms.ModelForm):
 				'class': 'form-control',
 			})
 		
-		if self.instance and self.instance.dept:
-			self.fields['past_courses'].queryset = Course.objects.filter(~Q(dept=self.instance.dept)).order_by('name')
-		else:
-			self.fields['past_courses'].queryset = Course.objects.all().order_by('name')
+		self.fields['past_courses'].queryset = Course.objects.filter(~Q(dept=self.instance.dept)).order_by('name')
 		self.fields['past_courses'].widget.attrs.update({
 				'placeholder': 'No courses choosen',
 				'class': 'form-control',
@@ -89,42 +75,37 @@ class StudentAcademicsForm(forms.ModelForm):
 				'class': 'form-control',
 			},choices=self.Meta.model.SLOT_CHOICES)
  
-	def clean_FA(self):
-		"""Raise validation error if FA is empty"""
-		FA = self.cleaned_data.get('FA')
-		if FA is None:
+	def clean_faculty_advisor(self):
+		faculty_advisor = self.cleaned_data.get('faculty_advisor')
+		if faculty_advisor is None:
 			raise ValidationError(_('This field is required'), code='empty')
-		return FA
+		return faculty_advisor
  
-	def clean_current_CGPA(self):
-		"""Raise validation error if current CGPA is empty"""
-		current_CGPA = self.cleaned_data.get('current_CGPA')
-		if current_CGPA is None:
+	def clean_current_cgpa(self):
+		current_cgpa = self.cleaned_data.get('current_cgpa')
+		if current_cgpa is None:
 			raise ValidationError(_('This field is required'), code='empty')
-		return current_CGPA
+		return current_cgpa
 
 	def clean_next_semester(self):
-		"""Raise validation error if next semester is empty"""
 		next_semester = self.cleaned_data.get('next_semester')
 		if next_semester is None:
 			raise ValidationError(_('This field is required'), code='empty')
 		return next_semester
 
 	def clean_required_elective_count(self):
-		"""Raise validation error if required elective count is empty"""
 		required_elective_count = self.cleaned_data.get('required_elective_count')
 		if required_elective_count is None:
 			raise ValidationError(_('This field is required'), code='empty')
 		return required_elective_count
 
-class CourseCreationForm(forms.ModelForm):
-	"""Form for editing or adding a course"""
+class CourseForm(forms.ModelForm):
 	class Meta:
 		model = Course
 		fields = ['course_id','name','dept','credits','pre_requisites','cot_requisite','cgpa_cutoff','mode_of_allotment']
 
 	def __init__(self, *args, **kwargs):
-		super(CourseCreationForm, self).__init__(*args, **kwargs)
+		super(CourseForm, self).__init__(*args, **kwargs)
 		
 		self.fields['course_id'].label = 'Course ID'
 		self.fields['course_id'].widget.attrs.update({
@@ -172,14 +153,13 @@ class CourseCreationForm(forms.ModelForm):
 				'class': 'form-control',
 			})		
 
-class ElectiveCreationForm(forms.ModelForm):
-	"""Form for editing or adding an elective"""	
+class ElectiveForm(forms.ModelForm):
 	class Meta:
 		model = Elective
 		fields = ['course','slot','faculty']
 	
 	def __init__(self, *args, **kwargs):
-		super(ElectiveCreationForm, self).__init__(*args, **kwargs)
+		super(ElectiveForm, self).__init__(*args, **kwargs)
 		
 		self.fields['slot'].label = 'Slot'
 		self.fields['slot'].widget.attrs.update({
@@ -192,37 +172,53 @@ class ElectiveCreationForm(forms.ModelForm):
 				'class': 'form-control',
 			})
 		
-class ElectiveSeatsCreationForm(forms.Form):
-	"""Form for adding elective seats"""
-	dept_name = forms.CharField(max_length=100)
-	max_seats = forms.IntegerField(min_value=0)
+class ElectiveSeatsForm(forms.ModelForm):
+	class Meta:
+		model = Elective_Seats
+		fields = ['max_seats','dept']
 		
 	def __init__(self, *args, **kwargs):
-		super(ElectiveSeatsCreationForm, self).__init__(*args, **kwargs)
+		super(ElectiveSeatsForm, self).__init__(*args, **kwargs)
 		
 		self.fields['max_seats'].label = 'Maximum Seats'
 		self.fields['max_seats'].widget.attrs.update({
 				'class': 'form-control',
            })
 		
-		self.fields['dept_name'].widget = forms.HiddenInput()
-		self.fields['dept_name'].widget.attrs.update({
+		self.fields['dept'].widget = forms.HiddenInput()
+		self.fields['dept'].widget.attrs.update({
 				'class': 'form-control',
-				'readonly': True,
            })
 		
-	def clean_dept_name(self):
-		dept_name = self.cleaned_data.get('dept_name')
-		try:
-			self.dept = Department.objects.get(name=dept_name)
-		except:
-			raise ValidationError(_('Invalid department'), code='invalid')
-		return dept_name
+	def clean_max_seats(self):
+		max_seats = self.cleaned_data.get('max_seats')
+		if max_seats is None:
+			raise ValidationError(_('Number of seats cannot be empty'), code='empty')
+		return max_seats
 	
 	def save(self, elective, commit=True):
 		max_seats = self.cleaned_data.get('max_seats')
-		elective_seat = Elective_Seats(elective=elective,dept=self.dept,max_seats=max_seats)		
+		dept = self.cleaned_data.get('dept')
+		elective_seat = Elective_Seats(elective=elective,dept=dept,max_seats=max_seats)		
 		if commit == True:
-			Elective_Seats.objects.filter(elective=elective,dept=self.dept).delete()
+			Elective_Seats.objects.filter(elective=elective,dept=dept).delete()
 			elective_seat.save()
 		return elective_seat
+	
+class MutuallyExclusiveCourseGroupForm(forms.ModelForm):
+	class Meta:
+		model = Mutually_Exclusive_Course_Group
+		fields = ['courses']
+		
+	def __init__(self, *args, **kwargs):
+		super(MutuallyExclusiveCourseGroupForm, self).__init__(*args, **kwargs)
+		
+		self.fields['courses'].label = 'Select mutually exclusive courses'
+		self.fields['courses'].widget.attrs.update({
+				'class': 'form-control',
+           })
+	
+class ElectivePreferenceForm(forms.ModelForm):
+	class Meta:
+		model = Elective_Preference
+		fields = ['student','elective','priority_rank']

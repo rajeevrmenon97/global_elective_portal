@@ -3,8 +3,28 @@
 
 {% block main_content %}
 <div class="container-fluid">
-	<a class="col-sm-12 text-right btn btn-link text-success" href="{% url 'logout' %}">Logout</a>
-	<form action="{% url 'sac_add_elective' %}" method="post">
+	<!--	NAVIGATION BAR    -->
+	<nav class="navbar navbar-expand-sm navbar-light mb-3 no-padding-left no-padding-right">
+		<button class="navbar-toggler navbar-toggler-small" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon navbar-toggler-icon-small"></span>
+		</button>
+	  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+		<ul class="navbar-nav mr-auto">
+		  <li class="nav-item">
+			<a class="nav-link" href="{% url 'sac_view_courses' %}">View Courses</a>
+		  </li>
+		  <li class="nav-item active">
+			<a class="nav-link" href="#">Add Course</a>
+		  </li>
+		  <li class="nav-item">
+			<a class="nav-link" href="{% url 'sac_add_exclusive_courses' %}">Mutually Exclusive Courses</a>
+		  </li>
+		</ul>
+	  </div>
+	</nav>
+	
+	<!--    MAIN CONTENT	-->
+	<form action="{% url 'sac_add_course' %}" method="post">
 		{% csrf_token %}
 		<table class="table table-hover">
 			<tbody>
@@ -42,7 +62,7 @@
 				</tr>				
 			</tbody>
 		</table>
-		<input class="btn btn-success pl-4 pr-4" type="submit" value="Next"/>
+		<input class="btn btn-success pl-4 pr-4 mb-4" type="submit" value="Next"/>
 	</form>
 </div>
 {% endblock %}

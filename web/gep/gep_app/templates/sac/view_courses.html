@@ -3,8 +3,28 @@
 
 {% block main_content %}
 <div class="container-fluid">
-	<a class="col-sm-12 text-right btn btn-link text-success" href="{% url 'logout' %}">Logout</a>
-	<div class="h2 text-center text-success font-weight-bold">Elective Home</div>
+	<!--	NAVIGATION BAR    -->
+	<nav class="navbar navbar-expand-sm navbar-light mb-3 no-padding-left no-padding-right">
+		<button class="navbar-toggler navbar-toggler-small" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon navbar-toggler-icon-small"></span>
+		</button>
+	  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+		<ul class="navbar-nav mr-auto">
+		  <li class="nav-item active">
+			<a class="nav-link" href="#">View Courses</a>
+		  </li>
+		  <li class="nav-item">
+			<a class="nav-link" href="{% url 'sac_add_course' %}">Add Course</a>
+		  </li>
+		  <li class="nav-item">
+			<a class="nav-link" href="{% url 'sac_add_exclusive_courses' %}">Mutually Exclusive Courses</a>
+		  </li>
+		</ul>
+	  </div>
+	</nav>
+	
+	<!--    MAIN CONTENT	-->
+	<div class="h2 text-center text-success">Global Elective Courses</div>
 	<table class="table table-hover">
 		<thead>
 			<th scope="col">Course ID</th>
@@ -18,14 +38,14 @@
 				<td>{{course.name}}</td>
 				<td>{{course.dept.name}}</td>
 				<td>
-					<form action="{% url 'sac_edit_elective' %}" method="post">
+					<form action="{% url 'sac_edit_course' %}" method="post">
 						{% csrf_token %}
 						<input name="course_id" type="hidden" value="{{course.course_id}}">
 						<input class="btn btn-success pl-4 pr-4" type="submit" value="Edit"/>
 					</form>
 				</td>
 				<td>
-					<form action="{% url 'sac_delete_elective' %}" method="post">
+					<form action="{% url 'sac_delete_course' %}" method="post">
 						{% csrf_token %}
 						<input name="course_id" type="hidden" value="{{course.course_id}}">
 						<input class="btn btn-danger" type="submit" value="Delete"/>

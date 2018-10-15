@@ -95,6 +95,14 @@ html,body {
     height: 27px;
 }
 
+.no-padding-left {
+	padding-left: 0;
+}
+
+.no-padding-right {
+	padding-right: 0;
+}
+
 .border-grey {
 	border: 1px solid #d3d9df;
 }

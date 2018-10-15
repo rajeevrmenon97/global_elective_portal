@@ -1,6 +1,12 @@
 Username,Name,Email
 CS,Computer Science and Engineering,cs_hod@nitc.ac.in
-MH,Mechanical Engineering,mh_hod@nitc.ac.in
+ME,Mechanical Engineering,me_hod@nitc.ac.in
 CE,Civil Engineering,ce_hod@nitc.ac.in
 CH,Chemical Engineering,ch_hod@nitc.ac.in
 BT,Biotechnology,bt_hod@nitc.ac.in
+EE,Electrical and Electronics engineering,ee_hod@nitc.ac.in
+EC,Electronics and Communicication Engineering,ec_hod@nitc.ac.in
+SOMS,School of Managment Studies,soms_hod@nitc.ac.in
+AR,Architecture,ar_hod@nitc.ac.in
+PE,Production Engineering,pe_hod@nitc.ac.in
+EP,Engineering Physics,ep_hod@nitc.ac.in

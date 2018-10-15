@@ -3,12 +3,34 @@
 
 {% block main_content %}
 <div class="container-fluid">
-	<a class="col-sm-12 text-right btn btn-link text-success" href="{% url 'logout' %}">Logout</a>
-	<div class="h4 col-sm-12 text-center text-success">Stage 1: Submission of Academic Details</div>
-	{% if is_submitted %}
+	<!--	NAVIGATION BAR    -->
+	<nav class="navbar navbar-expand-sm navbar-light mb-3 no-padding-left no-padding-right">
+		<button class="navbar-toggler navbar-toggler-small" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon navbar-toggler-icon-small"></span>
+		</button>
+	  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+		<ul class="navbar-nav mr-auto">
+		  <li class="nav-item active">
+			<a class="nav-link" href="#">Home</a>
+		  </li>
+		  <li class="nav-item">
+			<a class="nav-link" target="_blank" href="{% url 'password_change' %}">Change Password</a>
+		  </li>
+		</ul>
+		<ul class="navbar-nav">
+		  <li class="nav-item">
+			<a class="nav-link" href="{% url 'logout' %}">Logout</a>
+		  </li>
+		</ul>
+	  </div>
+	</nav>
+	
+	<!--    MAIN CONTENT	-->
+	<div class="h4 col-sm-12 text-center">Stage 1: Submission of Academic Details</div>
+	{% if has_submitted %}
 	<div class="small col-sm-12 text-center text-success">Submitted</div>
 	{% endif %}
-	{% if not is_submitted %}
+	{% if not has_submitted %}
 	<div class="small col-sm-12 text-center text-danger">Not submitted</div>
 	{% endif %}
 	<form action="{% url 'student_academic_data_submission' %}" method="post">
@@ -22,9 +44,9 @@
 			<div class="form-control form-control-disabled">{{name}}</div>
 		</div>
 		<div class="form-group">
-			<label class="form-label" for="id_{{form.FA.name}}">Faculty Advisor</label>
-			{{form.FA}}
-			{{form.FA.errors}}
+			<label class="form-label" for="id_{{form.faculty_advisor.name}}">Faculty Advisor</label>
+			{{form.faculty_advisor}}
+			{{form.faculty_advisor.errors}}
 		</div>
 		<div class="form-group">
 			<label class="form-label" for="id_{{form.next_semester.name}}">Registering semester</label>
@@ -32,9 +54,9 @@
 			{{form.next_semester.errors}}
 		</div>
 		<div class="form-group">
-			<label class="form-label" for="id_{{form.current_CGPA.name}}">CGPA upto previous semester</label>
-			{{form.current_CGPA}}
-			{{form.current_CGPA.errors}}
+			<label class="form-label" for="id_{{form.current_cgpa.name}}">CGPA upto previous semester</label>
+			{{form.current_cgpa}}
+			{{form.current_cgpa.errors}}
 		</div>
 		<div class="form-group">
 			<label class="form-label" for="id_{{form.required_elective_count.name}}">Number of global electives to be taken in coming semester (Including overloading)</label>
