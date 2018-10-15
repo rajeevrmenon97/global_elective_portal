@@ -11,7 +11,7 @@
 	  <div class="collapse navbar-collapse" id="navbarSupportedContent">
 		<ul class="navbar-nav mr-auto">
 		  <li class="nav-item active">
-			<a class="nav-link" href="#">Home</a>
+			<a class="nav-link" href="{% url 'student_home' %}">Home</a>
 		  </li>
 		  <li class="nav-item">
 			<a class="nav-link" target="_blank" href="{% url 'password_change' %}">Change Password</a>
@@ -26,29 +26,54 @@
 	</nav>
 	
 	<!--    MAIN CONTENT	-->
-	<div class="h4 col-sm-12 text-center">Alloted Global Electives</div>
-	<table class="table table-striped table-hover">
-		<thead>
-		<tr>
-			<th scope="col">Course ID</th>
-			<th scope="col">Course</th>
-			<th scope="col">Department</th>
-			<th scope="col">Slot</th>
-			<th scope="col">Faculty</th>
-		</tr>
-		</thead>
+	<div class="h2 text-center text-primary font-weight-bold">Global Elective Allotment</div>
+	<table class="table border">
 		<tbody>
-			{% for elective_allotment in elective_allotments %}
 			<tr>
-				<td>{{ elective_allotment.elective.course.course_id }}</td>
-				<td>{{ elective_allotment.elective.course.name }}</td>
-				<td>{{ elective_allotment.elective.course.dept.name }}</td>
-				<td>{{ elective_allotment.elective.get_slot_display }}</td>
-				<td>{{ elective_allotment.elective.faculty.name|default:"Not Alloted" }}</td>
+				<th scope="row">Roll Number</th>
+				<td>{{ student.user.username }}</td>
 			</tr>
-			{% endfor %}
+			<tr>
+				<th scope="row">Name</th>
+				<td>{{ student.name }}</td>
+			</tr>
+			<tr>
+				<th scope="row">Department</th>
+				<td>{{ student.dept.name }}</td>
+			</tr>
+			<tr>
+				<th scope="row">Faculty Advisor</th>
+				<td>{{ student.faculty_advisor.name }}</td>
+			</tr>
+			<tr>
+				<th scope="row">Electives</th>
+				<td>
+				<table class="table border">
+					<thead>
+					<tr>
+						<th scope="col">Course ID</th>
+						<th scope="col">Course</th>
+						<th scope="col">Department</th>
+						<th scope="col">Slot</th>
+						<th scope="col">Faculty</th>
+					</tr>
+					</thead>
+					<tbody>
+						{% for elective_allotment in elective_allotments %}
+						<tr>
+							<td>{{ elective_allotment.elective.course.course_id }}</td>
+							<td>{{ elective_allotment.elective.course.name }}</td>
+							<td>{{ elective_allotment.elective.course.dept.name }}</td>
+							<td>{{ elective_allotment.elective.get_slot_display }}</td>
+							<td>{{ elective_allotment.elective.faculty.name|default:"Not Alloted" }}</td>
+						</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+				</td>
+			</tr>
 		</tbody>
 	</table>
-	<div class="text-center"><button class="btn btn-success pl-4 pr-4" onclick="javascript:window.print()">Print</button></div>
+	<div class="text-center"><button class="btn btn-primary pl-4 pr-4" onclick="javascript:window.print()">Print</button></div>
 </div>
 {% endblock %}

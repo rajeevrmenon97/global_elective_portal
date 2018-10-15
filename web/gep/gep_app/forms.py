@@ -180,13 +180,15 @@ class ElectiveForm(forms.ModelForm):
 		
 		self.fields['slot'].label = 'Slot'
 		self.fields['slot'].widget.attrs.update({
-				'class': 'form-control',
+				'placeholder': 'Choose Slot',
+				'class': 'single-select-input',
            })
 
 		self.fields['faculty'].queryset = Faculty.objects.all().order_by('name')
 		self.fields['faculty'].label = 'Faculty'
 		self.fields['faculty'].widget.attrs.update({
-				'class': 'form-control',
+				'placeholder': 'Choose Faculty',
+				'class': 'single-select-input',
 			})
 		
 class ElectiveSeatsForm(forms.ModelForm):

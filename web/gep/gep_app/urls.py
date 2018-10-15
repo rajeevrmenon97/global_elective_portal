@@ -14,9 +14,8 @@ urlpatterns = [
 	#   Student Portal Views  #
 	###########################
 	path('student/home',views.student_home,name='student_home'),
-	path('student/home/academic',views.student_academic_data_submission,name='student_academic_data_submission'),	path('student/home/academic/done',views.student_academic_data_submission_done,name='student_academic_data_submission_done'),
+	path('student/home/academic',views.student_academic_data_submission,name='student_academic_data_submission'),
 	path('student/home/electives',views.student_preference_submission,name='student_preference_submission'),
-	path('student/home/electives/done',views.student_preference_submission_done,name='student_preference_submission_done'),
 	path('student/home/allotment',views.student_allotment_publication,name='student_allotment_publication'),
 	path('student/error',views.student_incomplete_previous_stage,name='student_incomplete_previous_stage'),
 	

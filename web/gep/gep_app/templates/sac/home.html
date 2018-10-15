@@ -11,7 +11,7 @@
 <!--	Loader	-->
 <div class="loader">
 	<div class="loading-spinner"></div>
-	<div class="text-success">Processing...</div>
+	<div class="text-primary">Processing...</div>
 </div>
 
 <div class="container-fluid">	
@@ -38,7 +38,7 @@
 	</nav>
 	
 	<!--    MAIN CONTENT	-->
-	<div class="h2 text-center text-success font-weight-bold">Global Elective Allotment Procedure</div>
+	<div class="h2 text-center text-primary font-weight-bold">Global Elective Allotment Procedure</div>
 	<div class="h6 font-weight-bold mt-3">Follow these steps in the given order to start the Global Elective Allotment process. </div>
 	
 	<ul class="list-group">
@@ -65,7 +65,7 @@
 			<form class="file-upload-form" action="{% url 'sac_upload_department_data' %}" method="post" enctype="multipart/form-data">
 				<div class="errorlist mt-1 file-upload-error"></div>
 				<input class="mt-3" required type="file" id="department_file" name="department_file">
-				<input class="btn btn-success mt-2 display-block file-upload-btn" type="button" value="Upload Department File">
+				<input class="btn btn-primary mt-2 display-block file-upload-btn" type="button" value="Upload Department File">
 			</form>
 		</li>
 		<!--	Upload Faculty data file	-->
@@ -75,7 +75,7 @@
 			<form class="file-upload-form" action="{% url 'sac_upload_faculty_data' %}" method="post" enctype="multipart/form-data">
 				<div class="errorlist mt-1 file-upload-error"></div>
 				<input class="mt-3" required type="file" id="faculty_file" name="faculty_file">
-				<input class="btn btn-success mt-2 display-block file-upload-btn" type="button" value="Upload Faculty File">
+				<input class="btn btn-primary mt-2 display-block file-upload-btn" type="button" value="Upload Faculty File">
 			</form>
 		</li>
 		<!--	Upload Student data file	-->
@@ -85,7 +85,7 @@
 			<form class="file-upload-form" action="{% url 'sac_upload_student_data' %}" method="post" enctype="multipart/form-data">
 				<div class="errorlist mt-1 file-upload-error"></div>
 				<input class="mt-3" required type="file" id="student_file" name="student_file">
-				<input class="btn btn-success mt-2 display-block file-upload-btn" type="button" value="Upload Student File">
+				<input class="btn btn-primary mt-2 display-block file-upload-btn" type="button" value="Upload Student File">
 			</form>
 		</li>
 		<!--	Upload Elective file	-->
@@ -105,13 +105,13 @@
 			<form class="file-upload-form" action="{% url 'sac_upload_elective_data' %}" method="post" enctype="multipart/form-data">
 				<div class="errorlist mt-1 file-upload-error"></div>
 				<input class="mt-3" required type="file" id="elective_file" name="elective_file">
-				<input class="btn btn-success mt-2 display-block file-upload-btn" type="button" value="Upload Elective File">
+				<input class="btn btn-primary mt-2 display-block file-upload-btn" type="button" value="Upload Elective File">
 			</form>
 		</li>
 		<!--	Manage Electives  -->
 		<li class="list-group-item">
 			<div>6) The following link will take to the 'Manage Elective' section of SAC Portal. After the commencement of elective preference submission stage, any addition, deletion or modification of electives must be done there. The students have to resubmit their preference list to be eligible for any new elective added. Also, any elective removed will be automatically removed from every student's preference list.</div>
-			<a href="{% url 'sac_view_courses' %}" target="_blank" class="btn btn-success mt-2">Manage Electives</a>
+			<a href="{% url 'sac_view_courses' %}" target="_blank" class="btn btn-primary mt-2">Manage Electives</a>
 		</li>
 		<!--	Upload Mutually Exclusive Course Group data file	-->
 		<li class="list-group-item">
@@ -120,7 +120,7 @@
 			<form class="file-upload-form" action="{% url 'sac_upload_mutually_exclusive_course_group_data' %}" method="post" enctype="multipart/form-data">
 				<div class="errorlist mt-1 file-upload-error"></div>
 				<input class="mt-3" required type="file" id="mutually_exclusive_course_group_file" name="mutually_exclusive_course_group_file">
-				<input class="btn btn-success mt-2 display-block file-upload-btn" type="button" value="Upload Mutually Exclusive Course File">
+				<input class="btn btn-primary mt-2 display-block file-upload-btn" type="button" value="Upload Mutually Exclusive Course File">
 			</form>
 		</li>
 		<!--	Upload COT Allotment data file	-->
@@ -130,26 +130,26 @@
 			<form class="file-upload-form" action="{% url 'sac_upload_cot_allotment_data' %}" method="post" enctype="multipart/form-data">
 				<div class="errorlist mt-1 file-upload-error"></div>
 				<input class="mt-3" required type="file" id="cot_allotment_file" name="cot_allotment_file">
-				<input class="btn btn-success mt-2 display-block file-upload-btn" type="button" value="Upload COT File">
+				<input class="btn btn-primary mt-2 display-block file-upload-btn" type="button" value="Upload COT File">
 			</form>
 		</li>
 		<!--	Download Academic data	-->
 		<li class="list-group-item">
 			<div>9) Download the academic data submitted by the students from the following link after academic data submission stage.</div>
-			<a class="btn btn-success mt-2" href="{% url 'sac_download_academic_data' %}">Download Academic Data</a>
+			<a class="btn btn-primary mt-2" href="{% url 'sac_download_academic_data' %}">Download Academic Data</a>
 		</li>
 		<!--	Start Global Elective Allotment	-->
 		<li class="list-group-item">
 			<div>10) Click on the following link to start alloting global electives to registered students.</div>
 			<form class="start-allotment-form" action="{% url 'sac_start_allotment' %}" method="post">
 				<div class="errorlist mt-1 start-allotment-form-error"></div>
-				<input class="start-allotment-btn btn btn-success mt-2 display-block" type="button" value="Start Global Elective Allotment">
+				<input class="start-allotment-btn btn btn-primary mt-2 display-block" type="button" value="Start Global Elective Allotment">
 			</form>
 		</li>
 		<!--	Download Allotment data	-->
 		<li class="list-group-item">
 			<div>11) Download the allotment data from the following link.</div>
-			<a class="btn btn-success mt-2" href="{% url 'sac_download_allotment_data' %}">Download Allotment Data</a>
+			<a class="btn btn-primary mt-2" href="{% url 'sac_download_allotment_data' %}">Download Allotment Data</a>
 		</li>
 	</ul>
 </div>

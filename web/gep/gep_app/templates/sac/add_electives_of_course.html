@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block js_files %}
+<script src="{% static 'gep_app/js/single_select_widget.js' %}"></script>
+{% endblock %}
+
 {% block main_content %}
 <div class="container-fluid">
 	<!--	NAVIGATION BAR    -->
@@ -21,7 +25,7 @@
 	</nav>
 	
 	<!--    MAIN CONTENT	-->
-	<div class="h5 col-12 text-center text-success">{{course}}</div>
+	<div class="h2 text-center text-primary font-weight-bold">{{course}}</div>
 	
 	<!--	Display error messages (if any)	-->
 	{% if messages %}
@@ -36,8 +40,8 @@
 	
 	<table class="table table-hover">
 		<thead>
-			<th scope="col">Slot</th>
-			<th scope="col">Faculty</th>
+			<th scope="col" style="min-width: 100px;">Slot</th>
+			<th scope="col" style="min-width: 200px;">Faculty</th>
 			{% for dept in depts %}
 			<th scope="col">{{dept.name}}</th>
 			{% endfor %}
@@ -93,7 +97,7 @@
 					{% endfor %}
 					<input type="hidden" value="{{course.course_id}}" name="course">
 					<td>
-						<input class="btn btn-success pl-4 mt-3 pr-4" type="submit" value="Add">
+						<input class="btn btn-primary pl-4 pr-4" type="submit" value="Add">
 					</td>
 				</form>
 			</tr>

@@ -12,19 +12,19 @@
 <div class="container-fluid bg-image">
 	<form class="col-lg-4 col-md-6 offset-lg-4 offset-md-3 form-container" action="{% url 'login' %}" method="post">
 		{% csrf_token %}
-		<div class="h2 text-center text-success mb-md-3 font-weight-bold">User Login</div>
+		<div class="h2 text-center text-primary mb-md-3 font-weight-bold">User Login</div>
 		{% if form.errors %}
 		<div class="small text-danger mb-md-1">* Invalid username or password</div>
 		{% endif %}
 		<div class="form-group">
-			<input class="form-control form-control-transparent text-success" type="text" placeholder="Username" name="username"/>
+			<input class="form-control form-control-transparent text-primary" type="text" placeholder="Username" name="username"/>
 		</div>
 		<div class="form-group">
-			<input class="form-control form-control-transparent text-success" type="password" placeholder="Password" name="password"/>
+			<input class="form-control form-control-transparent primary" type="password" placeholder="Password" name="password"/>
 		</div>
-		<input class="btn btn-success btn-block" type="submit" value="Submit"/>
-		<a href="{% url 'password_reset' %}" class="btn btn-link text-success text-center pt-md-1 pl-md-0">Forgot Password?</a>
+		<input class="btn btn-primary btn-block" type="submit" value="Submit"/>
+		<a href="{% url 'password_reset' %}" class="btn btn-link text-primary text-center pt-md-1 pl-md-0">Forgot Password?</a>
 	</form>
-	<a href="" class="btn btn-success text-light fixed-bottom" download>Download Allotment Guidelines</a>
+	<a href="" class="btn btn-primary text-light fixed-bottom" download>Download Allotment Guidelines</a>
 </div>
 {% endblock %}

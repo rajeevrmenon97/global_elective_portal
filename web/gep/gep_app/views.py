@@ -160,13 +160,20 @@ def get_sorted_submitted_electives(student):
 def get_queryset_difference(first_queryset,second_queryset):
 	return list(set(first_queryset) - set(second_queryset))
 
+def add_queryset(queryset, queryset_to_be_added):
+	queryset.extend(queryset_to_be_added)
+	return queryset
+
+def remove_queryset(queryset, queryset_to_be_removed):
+	return [elective for elective in queryset if elective not in queryset_to_be_removed]
+
 def get_updated_and_priority_sorted_elective_list(student):
 	sorted_submitted_electives = get_sorted_submitted_electives(student)
 	sorted_eligible_electives = get_sorted_eligible_electives(student)
 	recently_added_electives = get_queryset_difference(sorted_eligible_electives,sorted_submitted_electives)
 	recently_removed_electives = get_queryset_difference(sorted_submitted_electives,sorted_eligible_electives)
-	sorted_submitted_electives.extend(recently_added_electives)
-	return [elective for elective in sorted_submitted_electives if elective not in recently_removed_electives]
+	updated_and_priority_sorted_elective_list = remove_queryset(add_queryset(sorted_submitted_electives, recently_added_electives), recently_removed_electives)
+	return updated_and_priority_sorted_elective_list
 
 ##########################################
 #             Student Home               #
@@ -177,21 +184,16 @@ def student_home(request):
 	user = request.user
 	student = Student.objects.get(user=user)
 	
-	if is_academic_data_submission_stage():
-		if academic_data_submitted_check(student):
-			return redirect('student_academic_data_submission_done')
-		else:
-			return redirect('student_academic_data_submission')
-	elif is_preference_submission_stage():
-		if elective_preference_submitted_check(student):
-			return redirect('student_preference_submission_done')
-		else:
-			return redirect('student_preference_submission')
-	elif is_allotment_publication_stage():
-		return redirect('student_allotment_publication')
-	else:
-		raise Http404
-
+	context = {
+		'is_academic_data_submission_stage':is_academic_data_submission_stage(),
+		'is_preference_submission_stage':is_preference_submission_stage(),
+		'is_allotment_publication_stage':is_allotment_publication_stage(),
+		'academic_data_submission_status':academic_data_submitted_check(student),
+		'preference_submission_status':elective_preference_submitted_check(student),
+	}
+	
+	return render(request, 'student/home.html', context)
+	
 ##########################################
 #    Academic Details Submission Stage   #
 ##########################################
@@ -206,7 +208,7 @@ def student_academic_data_submission(request):
 			form = StudentAcademicsDataForm(request.POST, instance=student)
 			if form.is_valid():
 				form.save()
-				return redirect('student_academic_data_submission_done')
+				return redirect('student_home')
 		else:
 			form = StudentAcademicsDataForm(instance=student)
 
@@ -217,14 +219,6 @@ def student_academic_data_submission(request):
 		}
 
 		return render(request, 'student/academic_data_submission.html', context)
-	
-	return redirect('student_home')
-
-@login_required
-@user_passes_test(student_check)
-def student_academic_data_submission_done(request):
-	if is_academic_data_submission_stage():
-		return render(request, 'student/academic_data_submission_done.html')
 	
 	return redirect('student_home')
 	
@@ -278,7 +272,7 @@ def student_preference_submission(request):
 
 			student.submission_datetime = datetime.now()
 			student.save()
-			return redirect('student_preference_submission_done')
+			return redirect('student_home')
 
 		electives = get_updated_and_priority_sorted_elective_list(student)
 		context = {
@@ -287,15 +281,6 @@ def student_preference_submission(request):
 
 		return render(request, 'student/preference_submission.html', context)
 	
-	return redirect('student_home')
-
-@login_required
-@user_passes_test(student_check)
-@user_passes_test(academic_data_submitted_check, login_url='student_incomplete_previous_stage')
-def student_preference_submission_done(request):
-	if is_preference_submission_stage():
-		return render(request, 'student/preference_submission_done.html')
-
 	return redirect('student_home')
 	
 #############################################
@@ -312,6 +297,7 @@ def student_allotment_publication(request):
 
 		elective_allotments = Elective_Allotment.objects.filter(student=student)
 		context = {
+			'student':student,
 			'elective_allotments':elective_allotments,
 		}
 
