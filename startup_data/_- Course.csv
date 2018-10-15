@@ -1,0 +1,31 @@
+Course ID,Name,Department,Credits,Pre-requisites,COT Requisite,CGPA Cutoff,Mode of allotment,Allowed Semesters,Faculty,Slot,AR,BT,CE,CH,CS,EE,EC,ME,EP,PE,SOMS
+EE3029,Non-conventional Energy Systems & Applications,EE,3,None,FALSE,6.5,FCFS,5/7,ikru@nitc.ac.in,H,5,5,15,10,15,65,15,15,5,10,0
+EE4021,Artificial Neural Networks and Genetic Algorithms,EE,3,None,FALSE,6.5,CGPA,5/7,None,G,0,0,5,5,10,35,10,10,5,5,0
+SS3005,French,SOMS,3,None,FALSE,7,FCFS,7,None,F/G,10,10,10,10,10,10,10,10,10,10,10
+SS3007,German,SOMS,3,None,FALSE,7,FCFS,1/6,None,F/G,10,10,10,10,10,10,10,10,10,10,10
+BT3023,Food Biotechnology,BT,3,None,FALSE,0,FCFS,5/7,None,F,3,0,3,3,3,3,3,3,3,3,0
+BT4024,Molecular Modelling & Drug Design,BT,3,None,FALSE,0,FCFS,1/6,None,E,3,0,3,3,2,3,3,3,3,3,0
+AR 3002,Sociology and Human Settlement,AR,3,None,TRUE,0,FCFS,5/7,None,F,0,1,30,1,1,0,0,1,3,0,0
+AR 4003,Housing,AR,3,None,FALSE,0,FCFS,1/6,None,F,0,1,30,0,0,1,1,1,3,1,0
+AR 4004,Urban & Regional Planning,AR,3,None,FALSE,6.5,FCFS,5/7,None,G,0,0,34,0,0,0,0,1,3,0,0
+BT4023,Protein Engineering,BT,3,None,FALSE,0,FCFS,5/7,None,D,3,0,3,3,2,3,3,3,3,3,0
+BT4021,Marine Biotechnology,BT,3,None,FALSE,0,FCFS,5/7,None,H,3,0,3,3,2,3,3,3,3,3,0
+CH4021,Energy technology,CH,3,None,FALSE,0,FCFS,5/7,malu@nitc.ac.in,G,0,3,5,0,0,4,4,10,2,2,0
+CH4022,Petroleum refining and operations process,CH,3,None,FALSE,0,CGPA,1/6,james@nitc.acin,F,0,2,4,0,0,4,4,12,2,2,0
+CH4046,Project Engineering,CH,3,None,FALSE,7,FCFS,5/7,malu@nitc.ac.in,F,0,4,6,0,0,4,2,10,2,2,0
+CH4025,Polymer Technology,CH,3,None,FALSE,0,FCFS,5/7,james@nitc.acin,G,0,4,4,0,0,4,4,10,2,2,0
+CE4024,Transportation Planning,CE,3,None,FALSE,0,FCFS,5/7,aysh@nitc.ac.in,E,30,0,0,0,0,0,0,0,0,0,0
+CE4030,Environmental Pollution Control Engineering,CE,3,Mandatory Course on Environmental Studies,TRUE,0,CGPA,5/7,neels@nitc.ac.in,G,20,15,0,15,0,0,0,0,0,0,0
+EC4055,Design of Intelligent Systems,EC,3,None,FALSE,0,FCFS,5/7,None,F,0,0,10,5,5,5,0,0,0,0,0
+EC4033,Wavelet Theory,EC,3,Digital Signal Processing,FALSE,0,CGPA,1/6,kmon@nitc.ac.in,G,0,0,0,10,0,0,0,0,0,0,0
+EC4043,Cryptography: Theory and Practice,EC,3,None,FALSE,0,FCFS,5/7,ikka@nitc.ac.in,D,0,0,0,10,8,10,0,0,0,0,0
+ME3026,Introduction to Finite Element Methods,ME,3,None,FALSE,7,FCFS,5/7,kuttu@nitc.ac.in,G,0,0,5,5,5,5,0,35,0,10,0
+ME3128,Production Planning & Control,ME,3,None,FALSE,7,FCFS,5/7,None,F,0,0,5,5,10,10,10,60,5,30,0
+ME3130,Quality Planning Analysis,ME,3,None,FALSE,0,FCFS,5/7,None,G,0,0,5,5,10,10,10,60,5,30,0
+ME3024,Control System Engineering,ME,3,None,FALSE,0,CGPA,5/7,None,G,0,0,0,10,0,0,5,40,5,10,0
+ME3029,Computational Methods in Engineering,ME,3,None,FALSE,7.5,FCFS,5/7,None,G,0,0,15,5,25,10,0,20,0,5,0
+ME4032,Automobile Engineering,ME,3,None,FALSE,0,FCFS,5/7,None,F/G,0,0,10,10,5,10,10,70,5,30,0
+ME4026,Unconventional Energy Systems,ME,3,None,FALSE,0,FCFS,5/7,None,F,0,0,5,5,0,10,0,40,0,10,0
+ME4027,Computational Fluid Dynamics,ME,3,None,FALSE,0,CGPA,5/7,None,F,0,0,0,0,0,15,0,20,0,5,0
+ME4028,Aerodynamics,ME,3,None,TRUE,0,FCFS,5/7,None,G,0,0,0,0,0,0,0,40,0,10,0
+ME4128,Simulation Modeling & Analysis,ME,3,None,FALSE,0,FCFS,5/7,None,G,0,0,0,0,5,5,5,30,5,10,0

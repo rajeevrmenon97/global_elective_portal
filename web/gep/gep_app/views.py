@@ -6,7 +6,7 @@ from django.db.models import Q
 from django.contrib.auth import get_user_model
 from .models import Student, Elective, Course, Faculty, Department, Elective_Preference, COT_Allotment, Elective_Allotment, Elective_Seats, Mutually_Exclusive_Course_Group
 from django.forms import formset_factory
-from .forms import StudentAcademicsDataForm, CourseForm, ElectiveForm, ElectiveSeatsForm, UserForm, DepartmentForm, StudentForm, FacultyForm, MutuallyExclusiveCourseGroupForm, ElectivePreferenceForm
+from .forms import StudentAcademicsDataForm, CourseForm, ElectiveForm, ElectiveSeatsForm, MaxSeatsForm, UserForm, DepartmentForm, StudentForm, FacultyForm, MutuallyExclusiveCourseGroupForm, ElectivePreferenceForm
 from datetime import datetime
 from django.contrib import messages
 from django.core import exceptions
@@ -73,6 +73,10 @@ def allotment_publication_stage_check():
 	end_date = settings.APP_CONFIG['gep_app']['ALLOTMENT_PUBLICATION_END_DATE']
 	return datetime.strptime(start_date, '%Y-%m-%dT%H:%M:%S') < datetime.now() < datetime.strptime(end_date, '%Y-%m-%dT%H:%M:%S')
 
+def pre_allotment_publication_stage_check():
+	start_date = settings.APP_CONFIG['gep_app']['ALLOTMENT_PUBLICATION_START_DATE']
+	return datetime.strptime(start_date, '%Y-%m-%dT%H:%M:%S') > datetime.now()
+
 						#####################################
 						#              Login                #
 						#####################################
@@ -122,18 +126,18 @@ def home(request):
 ##########################################
 
 def remove_local_electives(student, electives):
-#	print(electives.filter(~Q(course__dept=student.dept)))
 	return electives.filter(~Q(course__dept=student.dept))
 
-#def remove_taken_electives(student, electives):
-#	return electives.filter(~Q(course__in=student.past_courses.all()))
+def remove_electives_with_ineligible_semesters(student, electives):
+	for elective in electives:
+		if student.next_semester not in elective.course.allowed_semesters:
+			electives = electives.filter(~Q(pk=elective.pk))
+	return electives
 
 def remove_electives_of_core_slots(student, electives):
-#	print(electives.filter(~Q(slot__in=student.core_slots)))
 	return electives.filter(~Q(slot__in=student.core_slots))
 
 def remove_electives_with_insufficient_cgpa(student, electives):
-#	print(electives.filter(course__cgpa_cutoff__lte=student.current_cgpa))
 	return electives.filter(course__cgpa_cutoff__lte=student.current_cgpa)
 
 def remove_taken_electives_and_mutually_exclusive_electives_of_taken_electives(student, electives):
@@ -144,19 +148,17 @@ def remove_taken_electives_and_mutually_exclusive_electives_of_taken_electives(s
 				electives = electives.filter(~Q(course__in=exclusive_course_group.courses.all()))
 			else:
 				electives = electives.filter(~Q(course=course))
-#	print(electives)
 	return electives
 
 def remove_electives_with_cot_not_acquired(student, electives):
 	for elective in electives:
 		cot_requisite = COT_Allotment.objects.filter(student=student,elective=elective).exists()
 		electives = electives.filter(course__cot_requisite=cot_requisite)
-#	print(electives)
 	return electives
 
 def get_sorted_eligible_electives(student):
 	electives = Elective.objects.all().order_by('slot', 'course__dept__name')
-	return remove_electives_with_cot_not_acquired(student, remove_electives_with_insufficient_cgpa(student, remove_taken_electives_and_mutually_exclusive_electives_of_taken_electives(student, remove_electives_of_core_slots(student, remove_local_electives(student, electives)))))
+	return remove_electives_with_cot_not_acquired(student, remove_electives_with_insufficient_cgpa(student, remove_taken_electives_and_mutually_exclusive_electives_of_taken_electives(student, remove_electives_of_core_slots(student, remove_electives_with_ineligible_semesters(student, remove_local_electives(student, electives))))))
 
 def get_sorted_submitted_electives(student):
 	sorted_submitted_elective_ids = Elective_Preference.objects.filter(student=student).order_by('priority_rank').values_list('elective',flat=True)
@@ -167,14 +169,9 @@ def get_queryset_difference(first_queryset,second_queryset):
 
 def get_updated_and_priority_sorted_elective_list(student):
 	sorted_submitted_electives = get_sorted_submitted_electives(student)
-#	print(sorted_submitted_electives)
 	sorted_eligible_electives = get_sorted_eligible_electives(student)
-#	print(sorted_eligible_electives)
 	recently_added_electives = get_queryset_difference(sorted_eligible_electives,sorted_submitted_electives)
-#	print(recently_added_electives)
 	recently_removed_electives = get_queryset_difference(sorted_submitted_electives,sorted_eligible_electives)
-#	print(recently_removed_electives)
-	
 	sorted_submitted_electives.extend(recently_added_electives)
 	return [elective for elective in sorted_submitted_electives if elective not in recently_removed_electives]
 
@@ -225,7 +222,7 @@ def student_academic_data_submission(request):
 @login_required
 @user_passes_test(student_check)
 def student_incomplete_previous_stage(request):
-	return render(request, 'student/test_failure.html')
+	return render(request, 'student/incomplete_previous_stage.html')
 
 #############################################
 #    Elective Preference Submission Stage   #
@@ -372,7 +369,7 @@ def sac_dept(request):
 					email = fields[2].strip()
 				except IndexError:
 					messages.error(request, 'Line ' + str(index+1) + ' insufficient number of fields')
-					break
+					return redirect('sac_home')
 
 				user_dict = {
 					'username': username,
@@ -396,10 +393,10 @@ def sac_dept(request):
 						dept_form.save()			
 					else:
 						messages.error(request, 'Line ' + str(index+1) + ' ' + convert_form_errors_to_string(dept_form))
-						break
+						return redirect('sac_home')
 				else:
 					messages.error(request, 'Line ' + str(index+1) + ' ' + convert_form_errors_to_string(user_form))
-					break
+					return redirect('sac_home')
 		else:
 			messages.error(request, 'This data can be updated only before academic data submission stage')
 				
@@ -437,7 +434,7 @@ def sac_faculty(request):
 					dept = fields[3].strip()
 				except IndexError:
 					messages.error(request, 'Line ' + str(index+1) + ' insufficient number of fields')
-					break
+					return redirect('sac_home')
 
 				user_dict = {
 					'username': username,
@@ -462,10 +459,10 @@ def sac_faculty(request):
 						faculty_form.save()			
 					else:
 						messages.error(request, 'Line ' + str(index+1) + ' ' + convert_form_errors_to_string(faculty_form))
-						break
+						return redirect('sac_home')
 				else:
 					messages.error(request, 'Line ' + str(index+1) + ' ' + convert_form_errors_to_string(user_form))
-					break
+					return redirect('sac_home')
 		else:
 			messages.error(request, 'This data can be updated only before academic data submission stage')
 				
@@ -504,7 +501,7 @@ def sac_student(request):
 					dept = fields[4].strip()
 				except IndexError:
 					messages.error(request, 'Line ' + str(index+1) + ' insufficient number of fields')
-					break
+					return redirect('sac_home')
 
 				user_dict = {
 					'username': username,
@@ -530,35 +527,144 @@ def sac_student(request):
 						student_form.save()			
 					else:
 						messages.error(request, 'Line ' + str(index+1) + ' ' + convert_form_errors_to_string(student_form))
-						break
+						return redirect('sac_home')
 				else:
 					messages.error(request, 'Line ' + str(index+1) + ' ' + convert_form_errors_to_string(user_form))
-					break
+					return redirect('sac_home')
 		else:
 			messages.error(request, 'This data can be updated only before academic data submission stage')
 				
 	return redirect('sac_home')
 
 ##########################################
-#             Upload COT Data            #
+#          Upload Elective Data          #
 ##########################################
 
 @login_required
 @user_passes_test(sac_check)
-def sac_cot(request):
+def sac_elective(request):
+	if request.method == 'POST':
+		if pre_preference_submission_stage_check():
+			Course.objects.all().delete()
+
+			uploaded_file = get_uploaded_file(request,'elective_file')
+			if uploaded_file is None:
+				return redirect('sac_home')
+			
+			elective_data = convert_csv_to_data(uploaded_file)
+			if elective_data is None:	
+				return redirect('sac_home')
+			
+			lines = elective_data.split("\n")
+			for index, line in enumerate(lines):
+				fields = line.split(",")
+				
+				if index == 0:
+					depts = [field.strip() for field in fields[11:]]
+					participating_depts = Department.objects.all()
+					for dept in participating_depts:
+						if not dept.user.username in depts:
+							messages.error(request, 'Department data incomplete')
+							return redirect('sac_home')
+					continue
+				
+				try:
+					course_id = fields[0].strip() #Extra \n and \r may be introduced during csv conversion
+					name = fields[1].strip()
+					dept = fields[2].strip()
+					credits = fields[3].strip()
+					pre_requisites =  None if fields[4].strip() == 'None' else fields[4].strip()
+					cot_requisite = fields[5].strip()
+					cgpa_cutoff = fields[6].strip()
+					mode_of_allotment = fields[7].strip()
+					allowed_semesters = fields[8].strip().split("/")
+					faculty = None if fields[9].strip() == 'None' else fields[9].strip()
+					slots = fields[10].strip().split("/")
+					seats_available_in_dept = dict()
+					for index, value in enumerate(depts):
+						seats_available_in_dept[value] = fields[11+index].strip()
+				except IndexError:
+					messages.error(request, 'Line ' + str(index+1) + ' insufficient number of fields')
+					return redirect('sac_home')
+				
+				course_dict = {
+					'course_id':course_id,
+					'name':name,
+					'dept':dept,
+					'credits':credits,
+					'pre_requisites':pre_requisites,
+					'cot_requisite':cot_requisite,
+					'cgpa_cutoff':cgpa_cutoff,
+					'mode_of_allotment':mode_of_allotment,
+					'allowed_semesters':allowed_semesters,
+				}
+				
+				course_form = CourseForm(course_dict)
+
+				if course_form.is_valid():
+					course = course_form.save()				
+				else:
+					messages.error(request, 'Line ' + str(index+1) + ' ' + convert_form_errors_to_string(course_form))
+					return redirect('sac_home')
+					
+				for slot in slots:
+					elective_dict = {
+						'course':course.course_id,
+						'slot':slot,
+						'faculty':faculty,
+					}
+				
+					elective_form = ElectiveForm(elective_dict)
+
+					if elective_form.is_valid():
+						elective = elective_form.save()
+						
+						for dept,max_seats in seats_available_in_dept.items():
+							print(dept)
+							print(max_seats)
+							elective_seats_dict = {
+								'elective':elective.pk,
+								'dept':dept,
+								'max_seats':max_seats,
+							}
+							
+							elective_seats_form = ElectiveSeatsForm(elective_seats_dict)
+							
+							if elective_seats_form.is_valid():
+								elective_seats_form.save()
+							else:
+								print(elective_seats_form)
+								messages.error(request, 'Line ' + str(index+1) + ' ' + convert_form_errors_to_string(elective_seats_form))
+								return redirect('sac_home')
+					else:
+						messages.error(request, 'Line ' + str(index+1) + ' ' + convert_form_errors_to_string(elective_form))
+						return redirect('sac_home')
+						
+		else:
+			messages.error(request, 'This data can be updated only before preference submission stage')
+				
+	return redirect('sac_home')
+
+##########################################
+#        Upload COT Allotment Data       #
+##########################################
+
+@login_required
+@user_passes_test(sac_check)
+def sac_cot_allotment(request):
 	if request.method == 'POST':
 		if pre_preference_submission_stage_check():
 			COT_Allotment.objects.all().delete()
 
-			uploaded_file = get_uploaded_file(request,'cot_file')
+			uploaded_file = get_uploaded_file(request,'cot_allotment_file')
 			if uploaded_file is None:
 				return redirect('sac_home')
 			
-			cot_data = convert_csv_to_data(uploaded_file)
-			if cot_data is None:	
+			cot_allotment_data = convert_csv_to_data(uploaded_file)
+			if cot_allotment_data is None:	
 				return redirect('sac_home')
 
-			lines = cot_data.split("\n")[1:]
+			lines = cot_allotment_data.split("\n")[1:]
 			for index, line in enumerate(lines):
 				fields = line.split(",")
 				try:
@@ -567,15 +673,15 @@ def sac_cot(request):
 					student = fields[2].strip()
 				except IndexError:
 					messages.error(request, 'Line ' + str(index+1) + ' insufficient number of fields')
-					break
+					return redirect('sac_home')
 
 				try:
 					elective = Elective.objects.get(course=course,slot=slot)
 				except exceptions.ObjectDoesNotExist:
 					messages.error(request, 'Invalid course or slot in line ' + str(index+1))
-					break
+					return redirect('sac_home')
 				
-				cot_dict = {
+				cot_allotment = {
 					'elective': elective,
 					'student': student,
 				}
@@ -584,11 +690,51 @@ def sac_cot(request):
 				if cot_allotment_form.is_valid():
 					cot_allotment_form.save()				
 				else:
-					messages.error(request, 'Line ' + str(index+1) + convert_form_errors_to_string(cot_allotment_form))
-					break
+					messages.error(request, 'Line ' + str(index+1) + ' ' + convert_form_errors_to_string(cot_allotment_form))
+					return redirect('sac_home')
 
 		else:
 			messages.error(request, 'This data can be updated only before preference submission stage')
+
+	return redirect('sac_home')
+
+###########################################
+# Upload Mutually Exclusive Elective Data #
+###########################################
+
+@login_required
+@user_passes_test(sac_check)
+def sac_mutually_exclusive_course_group(request):
+	if request.method == 'POST':
+		if pre_allotment_publication_stage_check():
+			Mutually_Exclusive_Course_Group.objects.all().delete()
+			
+			uploaded_file = get_uploaded_file(request,'mutually_exclusive_course_group_file')
+			if uploaded_file is None:
+				return redirect('sac_home')
+			
+			mutually_exclusive_course_group_data = convert_csv_to_data(uploaded_file)
+			if mutually_exclusive_course_group_data is None:	
+				return redirect('sac_home')
+
+			lines = mutually_exclusive_course_group_data.split("\n")
+			for index, line in enumerate(lines):
+				fields = line.split(",")
+				mutually_exclusive_courses = [field.strip() for field in fields]
+
+				mutually_exclusive_course_group = {
+					'courses': mutually_exclusive_courses,
+				}
+				
+				mutually_exclusive_course_group_form = MutuallyExclusiveCourseGroupForm(mutually_exclusive_course_group)
+				if mutually_exclusive_course_group_form.is_valid():
+					mutually_exclusive_course_group_form.save()			
+				else:
+					messages.error(request, 'Line ' + str(index+1) + ' ' + convert_form_errors_to_string(mutually_exclusive_course_group_form))
+					return redirect('sac_home')
+
+		else:
+			messages.error(request, 'This data can be updated only before allotment publication stage')
 
 	return redirect('sac_home')
 
@@ -782,8 +928,8 @@ def sac_view_electives_of_course(request):
 	elective_seats = Elective_Seats.objects.filter(elective__course=course).order_by('elective__slot','dept__name')
 
 	elective_form = ElectiveForm(initial={course:course})
-	ElectiveSeatsFormSet = formset_factory(ElectiveSeatsForm, extra=0)
-	elective_seats_formset = ElectiveSeatsFormSet(initial=[{'dept': dept} for dept in depts])
+	MaxSeatsFormSet = formset_factory(MaxSeatsForm, extra=0)
+	elective_seats_formset = MaxSeatsFormSet(initial=[{'dept': dept} for dept in depts])
 
 	context = {
 		'depts':depts,
@@ -816,8 +962,8 @@ def sac_add_elective_of_course(request):
 		if saved_course_id == course_id:
 			elective_form = ElectiveForm(request.POST)
 			depts = Department.objects.all().order_by('name')
-			ElectiveSeatsFormSet = formset_factory(ElectiveSeatsForm, extra=0)
-			elective_seats_formset = ElectiveSeatsFormSet(request.POST)
+			MaxSeatsFormSet = formset_factory(MaxSeatsForm, extra=0)
+			elective_seats_formset = MaxSeatsFormSet(request.POST)
 
 			if elective_form.is_valid():
 				if elective_seats_formset.is_valid():

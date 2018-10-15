@@ -38,14 +38,17 @@ class Faculty(models.Model):
 
 class Course(models.Model):
 	MODE_OF_ALLOTMENT_CHOICES = (('FCFS','First Come First Served'),('CGPA','Current CGPA'),)
+	SEMESTER_CHOICES = ((1,'Semester I'),(2,'Semester II'),(3,'Semester III'),(4,'Semester IV'),(5,'Semester V'),(6,'Semester VI'),(7,'Semester VII'),(8,'Semester VIII'),(9,'Semester IX'),(10,'Semester X'),)
+	
 	course_id = models.CharField(max_length=10,primary_key=True)
 	name = models.CharField(max_length=200,unique=True)
 	dept = models.ForeignKey(Department, on_delete=models.CASCADE)
 	credits = models.IntegerField(validators=[MinValueValidator(0)])
 	pre_requisites = models.TextField(max_length=500,blank=True,null=True)
 	cot_requisite = models.BooleanField(default=False)
-	cgpa_cutoff = models.IntegerField(default=0,validators=[MinValueValidator(0), MaxValueValidator(10)])
+	cgpa_cutoff = models.DecimalField(default=0,decimal_places=2,max_digits=4,validators=[MinValueValidator(0),MaxValueValidator(10)])
 	mode_of_allotment = models.CharField(max_length=4,choices=MODE_OF_ALLOTMENT_CHOICES)
+	allowed_semesters = ArrayField(models.IntegerField(choices=SEMESTER_CHOICES))
 
 	def __str__(self):
 		return '%s (%s)' % (self.name, self.course_id)

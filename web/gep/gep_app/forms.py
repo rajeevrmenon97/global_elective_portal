@@ -102,7 +102,7 @@ class StudentAcademicsDataForm(forms.ModelForm):
 class CourseForm(forms.ModelForm):
 	class Meta:
 		model = Course
-		fields = ['course_id','name','dept','credits','pre_requisites','cot_requisite','cgpa_cutoff','mode_of_allotment']
+		fields = ['course_id','name','dept','credits','pre_requisites','cot_requisite','cgpa_cutoff','mode_of_allotment','allowed_semesters']
 
 	def __init__(self, *args, **kwargs):
 		super(CourseForm, self).__init__(*args, **kwargs)
@@ -151,7 +151,12 @@ class CourseForm(forms.ModelForm):
 		self.fields['mode_of_allotment'].label = 'Mode of allotment'
 		self.fields['mode_of_allotment'].widget.attrs.update({
 				'class': 'form-control',
-			})		
+			})
+		
+		self.fields['allowed_semesters'].label = 'Allowed semesters'
+		self.fields['allowed_semesters'].widget = forms.SelectMultiple(attrs={
+				'class': 'form-control',
+			},choices=self.Meta.model.SEMESTER_CHOICES)
 
 class ElectiveForm(forms.ModelForm):
 	class Meta:
@@ -175,10 +180,15 @@ class ElectiveForm(forms.ModelForm):
 class ElectiveSeatsForm(forms.ModelForm):
 	class Meta:
 		model = Elective_Seats
+		fields = ['elective','max_seats','dept']
+		
+class MaxSeatsForm(forms.ModelForm):
+	class Meta:
+		model = Elective_Seats
 		fields = ['max_seats','dept']
 		
 	def __init__(self, *args, **kwargs):
-		super(ElectiveSeatsForm, self).__init__(*args, **kwargs)
+		super(MaxSeatsForm, self).__init__(*args, **kwargs)
 		
 		self.fields['max_seats'].label = 'Maximum Seats'
 		self.fields['max_seats'].widget.attrs.update({
