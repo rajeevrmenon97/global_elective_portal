@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% load static %}
+{% block main_content %}
+<div class="container-fluid">
+	<!--	NAVIGATION BAR    -->
+	<div class="row">
+	<nav class="col-9 navbar navbar-expand-sm navbar-light mb-3 style="background-color: transparent;"">
+	  <button class="navbar-toggler navbar-toggler-small" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+		<span class="navbar-toggler-icon navbar-toggler-icon-small"></span>
+	  </button>
+	  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+		<ul class="navbar-nav mr-auto">
+		  <li class="nav-item active">
+			<a class="nav-link" href="#">Startup</a>
+		  </li>
+		  <li class="nav-item">
+			<a class="nav-link" href="#">Electives</a>
+		  </li>
+		  <li class="nav-item">
+			<a class="nav-link" href="#">Academic data (dept|FA)</a>
+		  </li>
+		  <li class="nav-item">
+			<a class="nav-link" href="#">COT Allotment</a>
+		  </li>
+		  <li class="nav-item">
+			<a class="nav-link" href="#">Elective Allotment</a>
+		  </li>
+		</ul>
+	  </div>
+	</nav>
+    <a class="col-3 text-right btn btn-link text-success" href="{% url 'logout' %}">Logout</a>
+	</div>
+	
+	<!--    MAIN CONTENT	-->
+	<div class="h2 text-center text-success font-weight-bold">Consent of Teacher</div>
+	<div>
+		<div>Upload COT data file as csv in the following format. Data for all electives in all department should be uploaded together. Data updation must be done before elective preference submission phase.</div>
+		<img class="mt-2" src="{% static 'gep_app/images/cot.png' %}">
+		<!--	Display error messages (if any)	-->
+		{% if messages %}
+		<ul class="messages">
+			{% for message in messages %}
+				{% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+				<li {% if message.tags %} class="{{ message.tags }} errorlist"{% endif %}>{{ message }}</li>
+				{% endif %}
+			{% endfor %}
+		</ul>
+		{% endif %}
+		<!--	Upload COT data file	-->
+		<form action="{% url 'sac_consent_of_teacher' %}" method="post" enctype="multipart/form-data">
+			{% csrf_token %}
+			<input required type="file" id="cot_file" name="cot_file">
+			<input class="btn btn-success mt-4" type="submit" value="Upload">
+		</form>
+	</div>
+</div>
+{% endblock %}

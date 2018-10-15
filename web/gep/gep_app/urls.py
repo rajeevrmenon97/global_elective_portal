@@ -29,6 +29,8 @@ urlpatterns = [
 	path('sac/elective',views.sac_view_electives,name='sac_view_electives'),
 	path('sac/elective/add',views.sac_add_elective,name='sac_add_elective'),
 	path('sac/elective/slot',views.sac_add_elective_slot,name='sac_add_elective_slot'),
+	path('sac/cot',views.sac_consent_of_teacher,name='sac_consent_of_teacher'),
+	path('sac/academic',views.sac_academic_data,name='sac_academic_data'),
 	
 	###########################
 	#   Faculty Portal Views  #

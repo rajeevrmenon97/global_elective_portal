@@ -11,6 +11,7 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.core import exceptions
 from django.conf import settings
+
 					##########################################
 					#       User Passes Test Functions       #
 					##########################################
@@ -41,17 +42,29 @@ def preference_submission_check(user):
 	student = Student.objects.get(user=user)
 	return student.submission_datetime is not None
 
-def academic_data_submission_datetime_check():
+						##########################################
+						#       Current Stage Check Functions    #
+						##########################################
+
+def academic_data_submission_stage_check():
 	start_date = settings.APP_CONFIG['gep_app']['ACADEMIC_DATA_SUBMISSION_START_DATE']
 	end_date = settings.APP_CONFIG['gep_app']['ACADEMIC_DATA_SUBMISSION_END_DATE']
 	return datetime.strptime(start_date, '%Y-%m-%dT%H:%M:%S') < datetime.now() < datetime.strptime(end_date, '%Y-%m-%dT%H:%M:%S')
 
-def preference_submission_datetime_check():
+def pre_academic_data_submission_stage_check():
+	start_date = settings.APP_CONFIG['gep_app']['ACADEMIC_DATA_SUBMISSION_START_DATE']
+	return datetime.strptime(start_date, '%Y-%m-%dT%H:%M:%S') > datetime.now()
+
+def preference_submission_stage_check():
 	start_date = settings.APP_CONFIG['gep_app']['PREFERENCE_SUBMISSION_START_DATE']
 	end_date = settings.APP_CONFIG['gep_app']['PREFERENCE_SUBMISSION_END_DATE']
 	return datetime.strptime(start_date, '%Y-%m-%dT%H:%M:%S') < datetime.now() < datetime.strptime(end_date, '%Y-%m-%dT%H:%M:%S')
 
-def allotment_publication_datetime_check():
+def pre_preference_submission_stage_check():
+	start_date = settings.APP_CONFIG['gep_app']['PREFERENCE_SUBMISSION_START_DATE']
+	return datetime.strptime(start_date, '%Y-%m-%dT%H:%M:%S') > datetime.now()
+
+def allotment_publication_stage_check():
 	start_date = settings.APP_CONFIG['gep_app']['ALLOTMENT_PUBLICATION_START_DATE']
 	end_date = settings.APP_CONFIG['gep_app']['ALLOTMENT_PUBLICATION_END_DATE']
 	return datetime.strptime(start_date, '%Y-%m-%dT%H:%M:%S') < datetime.now() < datetime.strptime(end_date, '%Y-%m-%dT%H:%M:%S')
@@ -140,11 +153,11 @@ def get_preference_list(student):
 @login_required
 @user_passes_test(student_check)
 def student_home(request):
-	if academic_data_submission_datetime_check():
+	if academic_data_submission_stage_check():
 		return redirect('student_academic_data_submission')
-	elif preference_submission_datetime_check():
+	elif preference_submission_stage_check():
 		return redirect('student_preference_submission')
-	elif allotment_publication_datetime_check():
+	elif allotment_publication_stage_check():
 		return redirect('student_allotment_publication')
 	else:
 		raise Http404
@@ -274,13 +287,14 @@ def get_data_from_csv(request,return_view,csv_file_name):
 		return redirect(return_view)
 
 def add_error_messages_to_request(request,form,line_number):
+	""" Add error messages in the given form to given request for the given line number """
 	errorlist = form.errors
 	for field,errors in errorlist.items():
 		for error in errors:
 			messages.error(request,'In line %d %s: %s' %(line_number, field, error))
 	
 ##########################################
-#               SAC Home                 #
+#              Startup Page              #
 ##########################################
 
 @login_required
@@ -288,12 +302,16 @@ def add_error_messages_to_request(request,form,line_number):
 def sac_home(request):
 	return render(request, 'sac/home.html')
 
+##########################################
+#         Upload Department Data         #
+##########################################
+
 @login_required
 @user_passes_test(sac_check)
 def startup_dept(request):
 	""" Uploads Department data to database """
-	if request.method == 'POST':
-		# Clear the Database
+	if request.method == 'POST' and pre_academic_data_submission_stage_check():
+		# Clear Complete Database
 		Student.objects.all().delete()
 		Faculty.objects.all().delete()
 		Department.objects.all().delete()
@@ -305,11 +323,14 @@ def startup_dept(request):
 		lines = departments_data.split("\n")[1:]
 		for index, line in enumerate(lines):
 			fields = line.split(",")
+			username = fields[0].strip()
+			name = fields[1].strip()
+			email = fields[2].strip()
 			
 			# Create user for department
 			user_dict = {
-				'username': fields[0].strip(),
-				'email': fields[2].strip(),
+				'username': username,
+				'email': email,
 				'role': get_user_model().DEPARTMENT,
 			}
 			user_form = UserForm(user_dict)
@@ -322,7 +343,7 @@ def startup_dept(request):
 				# Create department
 				dept_dict = {
 					'user':user.username,
-					'name':fields[1].strip(),
+					'name':name,
 				}
 				dept_form = DepartmentForm(dept_dict)
 				if dept_form.is_valid():
@@ -333,15 +354,21 @@ def startup_dept(request):
 			else:
 				add_error_messages_to_request(request,user_form,index+1)
 				break
+	elif not pre_academic_data_submission_stage_check():
+		messages.error(request, 'This data can be updated only before academic data submission stage')
 				
 	return redirect('sac_home')
+
+##########################################
+#           Upload Student Data          #
+##########################################
 
 @login_required
 @user_passes_test(sac_check)
 def startup_student(request):
 	""" Uploads Student data to database """
-	if request.method == 'POST':
-		# Clear the Database
+	if request.method == 'POST' and pre_academic_data_submission_stage_check():
+		# Clear the Student Database
 		Student.objects.all().delete()
 		get_user_model().objects.filter(role=get_user_model().STUDENT).delete()
 		
@@ -351,11 +378,16 @@ def startup_student(request):
 		lines = students_data.split("\n")[1:]
 		for index, line in enumerate(lines):
 			fields = line.split(",")
+			username = fields[0].strip()
+			name = fields[1].strip()
+			email = fields[2].strip()
+			date_of_birth = fields[3].strip()
+			dept = fields[4].strip()
 			
 			# Create user for student
 			user_dict = {
-				'username': fields[0].strip(),
-				'email': fields[2].strip(),
+				'username': username,
+				'email': email,
 				'role': get_user_model().STUDENT,
 			}
 			user_form = UserForm(user_dict)
@@ -368,9 +400,9 @@ def startup_student(request):
 				# Create student
 				student_dict = {
 					'user':user.username,
-					'name':fields[1].strip(),
-					'date_of_birth':fields[3].strip(),
-					'dept':fields[4].strip(),
+					'name':name,
+					'date_of_birth':date_of_birth,
+					'dept':dept,
 				}
 				student_form = StudentForm(student_dict)
 				if student_form.is_valid():
@@ -381,17 +413,25 @@ def startup_student(request):
 			else:
 				add_error_messages_to_request(request,user_form,index+1)
 				break
+	elif not pre_academic_data_submission_stage_check():
+		messages.error(request, 'This data can be updated only before academic data submission stage')
 				
 	return redirect('sac_home')
+
+##########################################
+#           Upload Faculty Data          #
+##########################################
 
 @login_required
 @user_passes_test(sac_check)
 def startup_faculty(request):
-	""" Uploads Student data to database """
-	if request.method == 'POST':
-		# Clear the Database
+	""" Uploads Faculty data to database """
+	if request.method == 'POST' and pre_academic_data_submission_stage_check():
+		# Clear the Student and Faculty Database
+		Student.objects.all().delete()
 		Faculty.objects.all().delete()
 		get_user_model().objects.filter(role=get_user_model().FACULTY).delete()
+		get_user_model().objects.filter(role=get_user_model().STUDENT).delete()
 		
 		# Get the student data from uploaded CSV
 		faculties_data = get_data_from_csv(request,'sac_home','faculties_file')
@@ -399,11 +439,15 @@ def startup_faculty(request):
 		lines = faculties_data.split("\n")[1:]
 		for index, line in enumerate(lines):
 			fields = line.split(",")
+			username = fields[0].strip()
+			name = fields[1].strip()
+			email = fields[2].strip()
+			dept = fields[3].strip()
 			
 			# Create user for faculty
 			user_dict = {
-				'username': fields[0].strip(),
-				'email': fields[2].strip(),
+				'username': username,
+				'email': email,
 				'role': get_user_model().FACULTY,
 			}
 			user_form = UserForm(user_dict)
@@ -416,8 +460,8 @@ def startup_faculty(request):
 				# Create student
 				faculty_dict = {
 					'user':user.username,
-					'name':fields[1].strip(),
-					'dept':fields[3].strip(),
+					'name':name,
+					'dept':dept,
 				}
 				faculty_form = FacultyForm(faculty_dict)
 				if faculty_form.is_valid():
@@ -428,8 +472,63 @@ def startup_faculty(request):
 			else:
 				add_error_messages_to_request(request,user_form,index+1)
 				break
+	elif not pre_academic_data_submission_stage_check():
+		messages.error(request, 'This data can be updated only before academic data submission stage')
 				
 	return redirect('sac_home')
+
+##########################################
+#              Academic Page             #
+##########################################
+
+@login_required
+@user_passes_test(sac_check)
+def sac_academic_data(request):
+	pass
+
+##########################################
+#                 COT Page               #
+##########################################
+
+@login_required
+@user_passes_test(sac_check)
+def sac_consent_of_teacher(request):
+	if request.method == 'POST' and pre_preference_submission_stage_check():
+		# Clear the Database
+		COT_Allotment.objects.all().delete()
+		
+		# Get the COT data from uploaded CSV
+		cot_data = get_data_from_csv(request,'sac_home','cot_file')
+
+		lines = cot_data.split("\n")[1:]
+		for index, line in enumerate(lines):
+			fields = line.split(",")
+			course = fields[0].strip()
+			slot = fields[1].strip()
+			student = fields[2].strip()
+			
+			try:
+				elective = Elective.objects.get(course=course,slot=slot)
+				
+				# Create COT allotment
+				cot_dict = {
+					'elective': elective,
+					'student': student,
+				}
+				cot_allotment_form = COTAllotmentForm(cot_dict)
+
+				if cot_allotment_form.is_valid():
+					cot_allotment_form.save()				
+				else:
+					add_error_messages_to_request(request,cot_allotment_form,index+1)
+					break
+			except:
+				messages.error(request, 'Invalid course or slot in line ' + str(index+1))
+				break
+	elif not pre_preference_submission_stage_check():
+		messages.error(request, 'This data can be updated only before preference submission stage')
+
+	return render(request, 'sac/consent_of_teacher.html')
 
 @login_required
 @user_passes_test(sac_check)
@@ -516,14 +615,20 @@ def sac_add_elective_slot(request):
 	print(data)
 	return JsonResponse(data)
 
-
+						##########################################
+						#             Faculty Portal             #
+						##########################################
 	
 @login_required
 @user_passes_test(department_check)
 def department_home(request):
-	return render(request, 'department/home.html', context)
+	raise Http404
+
+						##########################################
+						#            Department Portal           #
+						##########################################
 	
 @login_required
 @user_passes_test(faculty_check)
 def faculty_home(request):
-	return render(request, 'faculty/home.html', context)
+	raise Http404

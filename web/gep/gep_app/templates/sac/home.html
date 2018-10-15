@@ -14,7 +14,7 @@
 			<a class="nav-link" href="#">Startup</a>
 		  </li>
 		  <li class="nav-item">
-			<a class="nav-link" href="{% url 'sac_elective' %}">Electives</a>
+			<a class="nav-link" href="#">Electives</a>
 		  </li>
 		  <li class="nav-item">
 			<a class="nav-link" href="#">Academic data (dept|FA)</a>
@@ -47,7 +47,7 @@
 	<ul class="list-group">
 		<!--	Upload Department data file	-->
 		<li class="list-group-item">
-			<div>1) Upload Department Data File as csv in the following format. Password of each department will be 'DEPARTMENT'.</div>
+			<div>1) Upload Department data file as csv in the following format. Password of each department will be 'DEPARTMENT'.</div>
 			<img class="mt-2" src="{% static 'gep_app/images/department.png' %}">
 			<form action="{% url 'startup_dept' %}" method="post" enctype="multipart/form-data">
 				{% csrf_token %}
@@ -55,23 +55,23 @@
 				<input class="btn btn-success mt-4" type="submit" value="Upload">
 			</form>
 		</li>
-		<!--	Upload Student data file	-->
-		<li class="list-group-item">
-			<div>2) Upload Student Data File as csv in the following format. Username and password of each student will be their roll number in block letters.</div>
-			<img class="mt-2" src="{% static 'gep_app/images/student.png' %}">
-			<form action="{% url 'startup_student' %}" method="post" enctype="multipart/form-data">
-				{% csrf_token %}
-				<input required type="file" id="students_file" name="students_file">
-				<input class="btn btn-success mt-4" type="submit" value="Upload">
-			</form>
-		</li>
 		<!--	Upload Faculty data file	-->
 		<li class="list-group-item">
-			<div>3) Upload Faculty Data File as csv in the following format. Username of the faculty will be same as their email and password will be 'FACULTY'.</div>
+			<div>2) Upload Faculty data file as csv in the following format. Username of the faculty will be same as their email and password will be 'FACULTY'.</div>
 			<img class="mt-2" src="{% static 'gep_app/images/faculty.png' %}">
 			<form action="{% url 'startup_faculty' %}" method="post" enctype="multipart/form-data">
 				{% csrf_token %}
 				<input required type="file" id="faculties_file" name="faculties_file">
+				<input class="btn btn-success mt-4" type="submit" value="Upload">
+			</form>
+		</li>
+		<!--	Upload Student data file	-->
+		<li class="list-group-item">
+			<div>3) Upload Student data file as csv in the following format. Username and password of each student will be their roll number in block letters.</div>
+			<img class="mt-2" src="{% static 'gep_app/images/student.png' %}">
+			<form action="{% url 'startup_student' %}" method="post" enctype="multipart/form-data">
+				{% csrf_token %}
+				<input required type="file" id="students_file" name="students_file">
 				<input class="btn btn-success mt-4" type="submit" value="Upload">
 			</form>
 		</li>
@@ -88,7 +88,15 @@
 				<li class="sub-list-group-item"><b>EMAIL_HOST_USER: </b>It is the email from which all mails related to allotment is sent.</li>
 				<li class="sub-list-group-item"><b>EMAIL_HOST_PASSWORD: </b>It is the password of the above mentioned email.</li>
 			</ul>
-		</li> 
+		</li>
+		<!--	To Add Electives  -->
+		<li class="list-group-item">
+			<div>5) Go to the elective section of SAC portal and add details of all global electives. This must be done before providing access to students to submit the elective preference list. If any elective is added after that, then the students have to resubmit their preference list to be eligible for it. If any elective is removed after that, then they will be automatically removed from their preference list.</div>
+		</li>
+		<!--	To Add COT Data  -->
+		<li class="list-group-item">
+			<div>5) Go to the COT section of SAC portal and add details of students who has acquired COT for courses requiring COT. This must be done before providing access to students to submit the elective preference list.</div>
+		</li>
 	</ul>
 </div>
 {% endblock %}
