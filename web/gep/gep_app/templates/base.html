@@ -12,15 +12,25 @@
 		<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
 		<script src="{% static 'gep_app/js/bootstrap.min.js' %}"></script>
+		<script src="{% static 'gep_app/js/loader.js' %}"></script>
 		{% block js_files %} {% endblock %}
 	</head>
 	<body>
+		<!--	LOADER	-->
+		<div class="loader">
+			<div class="loading-spinner"></div>
+			<div class="text-primary">Loading...</div>
+		</div>
+		
+		<!--	HEADER	-->
 		<nav class="navbar fixed-top navbar-light bg-primary">
-			<a class="navbar-brand text-light" href="#">
+			<a class="navbar-brand text-light">
 				<img src="{% static 'gep_app/images/nitc-logo.png' %}" width="45px" height="45px" alt="" class="d-inline-block align-top ml-md-2 mr-md-2">
 				<span class="h4 align-bottom">NITC Online Global Elective Allotment Portal</span>
 			</a>
 		</nav>
+		
+		<!--	CONTENT	-->
         {% block main_content %}{% endblock %}		
 	</body>
 </html>

@@ -1,6 +1,4 @@
-$(document).ready(function() {
-	$(".loader").hide();
-	
+$(document).ready(function() {	
 	$('.start-allotment-btn').click(function(){
 		var submit_button = $(this);
 		var form = submit_button.closest('.start-allotment-form');

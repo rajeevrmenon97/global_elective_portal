@@ -1,6 +1,4 @@
 $(document).ready(function() {
-	$(".loader").hide();
-	
 	$('.file-upload-btn').click(function(){
 		var submit_button = $(this);
 		var form = submit_button.closest('.file-upload-form');

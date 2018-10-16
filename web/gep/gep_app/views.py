@@ -301,7 +301,7 @@ def student_allotment_publication(request):
 			'elective_allotments':elective_allotments,
 		}
 
-		return render(request, 'student/allotment.html', context)
+		return render(request, 'student/allotment_publication.html', context)
 
 	return redirect('student_home')
 

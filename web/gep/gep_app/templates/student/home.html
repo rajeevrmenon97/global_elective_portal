@@ -1,48 +1,25 @@
-{% extends "base.html" %}
+{% extends "student/base.html" %}
 {% load static %}
 
-{% block main_content %}
-<div class="container-fluid">
-	<!--	NAVIGATION BAR    -->
-	<nav class="navbar navbar-expand-sm navbar-light mb-3 no-padding-left no-padding-right">
-		<button class="navbar-toggler navbar-toggler-small" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-			<span class="navbar-toggler-icon navbar-toggler-icon-small"></span>
-		</button>
-	  <div class="collapse navbar-collapse" id="navbarSupportedContent">
-		<ul class="navbar-nav mr-auto">
-		  <li class="nav-item active">
-			<a class="nav-link" href="#">Home</a>
-		  </li>
-		  <li class="nav-item">
-			<a class="nav-link" target="_blank" href="{% url 'password_change' %}">Change Password</a>
-		  </li>
-		</ul>
-		<ul class="navbar-nav">
-		  <li class="nav-item">
-			<a class="nav-link" href="{% url 'logout' %}">Logout</a>
-		  </li>
-		</ul>
-	  </div>
-	</nav>
-	
-	<!--    MAIN CONTENT	-->
+{% block sub_content %}
+<div>
 	<div class="row">
 		<div class="stage-status-container text-center">
 			<div class="h3">Stage 1</div>
 			<div class="h5">Academic Data Submission</div>
 			{% if is_academic_data_submission_stage %}
 				{% if academic_data_submission_status %}
-				<div><img class="stage-status-icon" src="{% static 'gep_app/images/tick.jpg' %}"></div>
-				<a class="btn btn-danger text-light" href="{% url 'student_academic_data_submission' %}">Edit Response</a>
+				<div><img class="stage-status-icon" src="{% static 'gep_app/images/tick.png' %}"></div>
+				<a class="btn btn-primary text-light" href="{% url 'student_academic_data_submission' %}">Edit Response</a>
 				{% else %}
-				<div><img class="stage-status-icon" src="{% static 'gep_app/images/cross.jpg' %}"></div>
-				<a class="btn btn-danger" href="{% url 'student_academic_data_submission' %}">Submit Academic Data</a>
+				<div><img class="stage-status-icon" src="{% static 'gep_app/images/cross.png' %}"></div>
+				<a class="btn btn-primary" href="{% url 'student_academic_data_submission' %}">Submit Academic Data</a>
 				{% endif %}			
 			{% else %}
 				{% if academic_data_submission_status %}
-				<div><img class="stage-status-icon" src="{% static 'gep_app/images/tick.jpg' %}"></div>
+				<div><img class="stage-status-icon" src="{% static 'gep_app/images/tick.png' %}"></div>
 				{% else %}
-				<img class="stage-status-icon" src="{% static 'gep_app/images/cross.jpg' %}">
+				<img class="stage-status-icon" src="{% static 'gep_app/images/cross.png' %}">
 				{% endif %}			
 			{% endif %}
 		</div>
@@ -51,17 +28,17 @@
 			<div class="h5">Elective Preference Submission</div>
 			{% if is_preference_submission_stage %}
 				{% if preference_submission_status %}
-				<div><img class="stage-status-icon" src="{% static 'gep_app/images/tick.jpg' %}"></div>
-				<a class="btn btn-danger text-light" href="{% url 'student_preference_submission' %}">Edit Response</a>
+				<div><img class="stage-status-icon" src="{% static 'gep_app/images/tick.png' %}"></div>
+				<a class="btn btn-primary text-light" href="{% url 'student_preference_submission' %}">Edit Response</a>
 				{% else %}
-				<div><img class="stage-status-icon" src="{% static 'gep_app/images/cross.jpg' %}"></div>
-				<a class="btn btn-danger" href="{% url 'student_preference_submission' %}">Submit Elective Preference</a>
+				<div><img class="stage-status-icon" src="{% static 'gep_app/images/cross.png' %}"></div>
+				<a class="btn btn-primary" href="{% url 'student_preference_submission' %}">Submit Elective Preference</a>
 				{% endif %}			
 			{% else %}
 				{% if preference_submission_status %}
-				<div><img class="stage-status-icon" src="{% static 'gep_app/images/tick.jpg' %}"></div>
+				<div><img class="stage-status-icon" src="{% static 'gep_app/images/tick.png' %}"></div>
 				{% else %}
-				<img class="stage-status-icon" src="{% static 'gep_app/images/cross.jpg' %}">
+				<img class="stage-status-icon" src="{% static 'gep_app/images/cross.png' %}">
 				{% endif %}			
 			{% endif %}
 		</div>
@@ -69,10 +46,10 @@
 			<div class="h3">Stage 3</div>
 			<div class="h5">Allotment Publication</div>
 			{% if is_allotment_publication_stage %}	
-			<div><img class="stage-status-icon" src="{% static 'gep_app/images/tick.jpg' %}"></div>
-			<a class="btn btn-danger text-light" href="{% url 'student_allotment_publication' %}">View Allotment</a>
+			<div><img class="stage-status-icon" src="{% static 'gep_app/images/tick.png' %}"></div>
+			<a class="btn btn-primary text-light" href="{% url 'student_allotment_publication' %}">View Allotment</a>
 			{% else %}
-			<img class="stage-status-icon" src="{% static 'gep_app/images/cross.jpg' %}">
+			<img class="stage-status-icon" src="{% static 'gep_app/images/cross.png' %}">
 			{% endif %}
 		</div>
 	</div>
