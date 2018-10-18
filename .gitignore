@@ -1,3 +1,4 @@
+db/
 web/gep/staticfiles/gep_app/
 web/gep/staticfiles/staticfiles.json
 migrations/
