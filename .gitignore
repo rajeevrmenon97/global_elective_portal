@@ -1,6 +1,5 @@
 db/
-web/gep/staticfiles/gep_app/
-web/gep/staticfiles/staticfiles.json
+staticfiles/
 migrations/
 # Byte-compiled / optimized / DLL files
 __pycache__/
