@@ -15,7 +15,7 @@ services:
   web:
     build: ./web
     container_name: gep_web
-    command: ["bash", "./wait_for_db.sh", "gep_db", "--", "python", "./gep/manage.py", "runserver", "0.0.0.0:8000"]
+    command: ["bash", "./wait_for_db.sh", "gep_db"]
     restart: always
     volumes:
       - ./web/gep:/code/gep

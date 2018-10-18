@@ -13,5 +13,8 @@ while sleep 1; do
   echo "Database is unavailable - sleeping"
 done
 
-cmd="$@" 
-exec $cmd
+cd gep
+python manage.py collectstatic --noinput
+python manage.py makemigrations gep_app
+python manage.py migrate
+gunicorn gep_project.wsgi:application -w 2 -b :8000
